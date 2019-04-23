@@ -13,7 +13,7 @@ class COCOStuffF1:
     IMG_HEIGHT = 426
     IMG_WIDTH = 640
 
-    def __init__(self, root):
+    def __init__(self, root, in_memory=True):
         self.root = root
         self.img_names = []
         self.bbox_indexes = []
@@ -24,6 +24,27 @@ class COCOStuffF1:
             for row in reader:
                 self.img_names.append(row[0])
                 self.bbox_indexes.append(row[1])
+
+        self.in_memory = in_memory
+        if self.in_memory:
+            self.in_memory = False
+            self._load_into_memory()
+            self.in_memory = True
+
+    def _load_into_memory(self):
+        self.images = []
+        self.labels = []
+        print("Loading into memory...")
+        for index, image, label in tqdm(enumerate(self)):
+            self.images.append(image)
+            seg = label[0]
+            frac = (seg == 1).sum() / (seg.shape[0] * seg.shape[1])
+            if frac < 0.6:
+                y = 0
+            else:
+                y = 1
+                self.num_positives += 1
+            self.labels.append((seg, y, index))
 
     def __getitem__(self, index):
         """

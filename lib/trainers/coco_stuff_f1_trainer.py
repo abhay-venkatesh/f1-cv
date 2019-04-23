@@ -26,7 +26,6 @@ class COCOStuffF1Trainer(Trainer):
             dataset=valset, batch_size=self.experiment.config["batch size"])
 
         # Constants
-        raise NotImplementedError("TODO: setup num_positives into the dataset")
         num_positives = self.train_loader.dataset.num_positives
 
         # Primal variables
