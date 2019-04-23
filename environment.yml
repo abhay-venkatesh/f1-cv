@@ -1,0 +1,13 @@
+name: pytorch-template
+channels:
+- pytorch
+dependencies:
+- python=3.7
+- pyyaml
+- inflection
+- tqdm
+- matplotlib
+- pytorch
+- torchvision
+- scikit-image
+- cudnn
