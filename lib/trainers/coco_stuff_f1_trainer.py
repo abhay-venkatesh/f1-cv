@@ -73,7 +73,7 @@ class COCOStuffF1Trainer(Trainer):
         train_iter = iter(train_loader)
         for epoch in tqdm(range(self.start_epochs, self.config["epochs"])):
             total_loss = 0
-            self.model.train()
+            model.train()
             for _ in tqdm(range(self.config["n_inner"])):
                 # Sample
                 try:
@@ -91,8 +91,8 @@ class COCOStuffF1Trainer(Trainer):
                 # Loss business
                 lagrangian = lagrange(num_positives, y_, y, w, eps, tau[i],
                                       lamb[i], mu, gamma, self.device)
-                loss = self.cross_entropy2d(
-                    Y_, Y) + (self.config["beta"] * lagrangian)
+                loss = cross_entropy2d(Y_,
+                                       Y) + (self.config["beta"] * lagrangian)
                 total_loss += loss.item()
 
                 # Backpropagate
@@ -117,10 +117,11 @@ class COCOStuffF1Trainer(Trainer):
             mu.data = mu.data + (self.config["eta_mu"] * tau_1)
             gamma.data = gamma.data + (self.config["eta_gamma"] * tau_eps)
 
-            # Log, validate, and checkpoint
+            # Log loss
             avg_loss = total_loss / len(self.train_loader)
             self.logger.log("epoch", epoch, "avg_loss", avg_loss)
 
+            # Validate
             model.eval()
             ious = []
             with torch.no_grad():
@@ -133,7 +134,15 @@ class COCOStuffF1Trainer(Trainer):
                     iou = get_iou(predicted, labels)
                     ious.append(iou.item())
 
+            # Log mean IOU
             mean_iou = mean(ious)
             self.logger.log("epoch", epoch, "mean_iou", mean_iou)
 
+            # Graph
             self.logger.graph()
+
+            # Checkpoint
+            torch.save(
+                model.state_dict(),
+                Path(self.experiment.checkpoints_folder,
+                     str(epoch + 1) + ".ckpt"))
