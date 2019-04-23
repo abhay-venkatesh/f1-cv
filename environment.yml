@@ -1,4 +1,4 @@
-name: pytorch-template
+name: f1-cv
 channels:
 - pytorch
 dependencies:
