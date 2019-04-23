@@ -17,6 +17,7 @@ class COCOStuffF1:
         self.root = root
         self.img_names = []
         self.bbox_indexes = []
+        self.num_positives = 0
 
         ann_file_path = Path(self.root, "annotations.csv")
         with open(ann_file_path, newline='') as ann_file:
@@ -35,9 +36,8 @@ class COCOStuffF1:
         self.images = []
         self.labels = []
         print("Loading into memory...")
-        for index, image, label in tqdm(enumerate(self)):
+        for image, (seg, y, index) in tqdm(self):
             self.images.append(image)
-            seg = label[0]
             frac = (seg == 1).sum() / (seg.shape[0] * seg.shape[1])
             if frac < 0.6:
                 y = 0
