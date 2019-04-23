@@ -1,6 +1,6 @@
 from lib.datasets.coco import COCOStuff
-from lib.trainers.functional import cross_entropy2d, get_iou
 from lib.models.segnet import get_model
+from lib.trainers.functional import cross_entropy2d, get_iou
 from lib.trainers.trainer import Trainer
 from pathlib import Path
 from statistics import mean
