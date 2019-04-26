@@ -1,6 +1,0 @@
-[submodule "lib/simple_ml_logger"]
-	path = lib/simple_ml_logger
-	url = https://github.com/abhay-venkatesh/simple_ml_logger
-[submodule "lib/utils/simple_ml_logger"]
-	path = lib/utils/simple_ml_logger
-	url = https://github.com/abhay-venkatesh/simple_ml_logger
