@@ -63,7 +63,6 @@ class MNISTBS(MNIST):
         img, target = self.data[index], self.targets[index]
 
         img = Image.fromarray(img)
-
         if self.transform is not None:
             img = self.transform(img)
         else:

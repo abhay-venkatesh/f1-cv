@@ -1,5 +1,4 @@
 import torch.nn as nn
-import torch.nn.functional as F
 
 
 class BasicNet(nn.Module):
@@ -14,7 +13,7 @@ class BasicNet(nn.Module):
             nn.Conv2d(16, 32, kernel_size=5, stride=1, padding=2),
             nn.BatchNorm2d(32), nn.ReLU(), nn.MaxPool2d(
                 kernel_size=2, stride=2))
-        self.fc = nn.Linear(7 * 7 * 32, num_classes)
+        self.fc = nn.Linear(16 * 16 * 32, num_classes)
 
     def forward(self, x):
         out = self.layer1(x)

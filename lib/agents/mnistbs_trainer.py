@@ -41,8 +41,6 @@ class MNISTBSTrainer(Trainer):
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
                 Y_ = model(X)
-                print(Y_.shape)
-                print(Y.shape)
                 loss = F.cross_entropy(Y_, Y)
                 total_loss += loss.item()
 
@@ -52,7 +50,7 @@ class MNISTBSTrainer(Trainer):
                 optimizer.zero_grad()
 
             # Log loss
-            avg_loss = total_loss / len(self.train_loader)
+            avg_loss = total_loss / len(train_loader)
             self.logger.log("epoch", outer, "loss", avg_loss)
 
             # Validate
