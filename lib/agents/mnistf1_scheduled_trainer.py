@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 
 
-class MNISTF1Trainer(Trainer):
+class MNISTF1ScheduledTrainer(Trainer):
     def run(self):
         # Training set
         trainset = MNISTF1(
