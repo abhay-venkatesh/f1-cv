@@ -7,14 +7,14 @@ import numpy as np
 import torch
 
 
-class F1MNIST(MNIST):
+class MNISTF1(MNIST):
     def __init__(self,
                  root,
                  train=True,
                  transform=None,
                  target_transform=None,
                  download=False):
-        super(F1MNIST, self).__init__(root, train, transform, target_transform,
+        super(MNISTF1, self).__init__(root, train, transform, target_transform,
                                       download)
         self.root = root
         self.transform = transform

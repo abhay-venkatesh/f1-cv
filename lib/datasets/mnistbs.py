@@ -5,6 +5,7 @@ from tqdm import tqdm
 import cv2
 import numpy as np
 import torch
+from torchvision import transforms
 
 
 class MNISTBS(MNIST):
@@ -65,7 +66,11 @@ class MNISTBS(MNIST):
 
         if self.transform is not None:
             img = self.transform(img)
+        else:
+            img = transforms.ToTensor()(img)
         if self.target_transform is not None:
             target = self.target_transform(target)
+        else:
+            target = transforms.ToTensor()(target)
 
         return img, target
