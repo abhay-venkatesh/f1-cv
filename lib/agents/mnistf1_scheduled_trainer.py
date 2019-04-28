@@ -71,13 +71,14 @@ class MNISTF1ScheduledTrainer(Trainer):
 
         # Define inner epochs schedule
         def schedule_n_inner(n_inner):
-            if n_inner == self.config["n_inner"]:
-                return n_inner
+            increment = self.config["n_inner"] // self.config["schedule"]
+            if n_inner >= self.config["n_inner"]:
+                return self.config["n_inner"]
             else:
-                return n_inner + 100
+                return n_inner + increment
 
         # Initialize inner epochs
-        n_inner = 100
+        n_inner = self.config["n_inner"] // self.config["schedule"]
         step = 0
 
         # Train
