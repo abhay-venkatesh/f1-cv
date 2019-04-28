@@ -67,4 +67,4 @@ class MNISTBSTrainer(Trainer):
             self.logger.graph()
 
             # Checkpoint
-            self._save_checkpoint(epoch, model, retain=False)
+            self._save_checkpoint(epoch, model)

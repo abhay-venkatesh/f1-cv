@@ -3,8 +3,9 @@ epochs: 10
 dataset path: D:\code\data\filtered_datasets\mnistf1
 learning rate: 0.01
 batch size: 100
-n_outer: 40
+n_outer: 15
 n_inner: 1200
+schedule: 5
 
 # Normalization coefficient
 beta: 0.001

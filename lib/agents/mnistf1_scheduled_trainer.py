@@ -157,7 +157,7 @@ class MNISTF1ScheduledTrainer(Trainer):
                     self.logger.graph()
 
                     # Checkpoint
-                    self._save_checkpoint(epochs, model, retain=True)
+                    self._save_checkpoint(epochs, model)
 
             # Dual Updates
             with torch.no_grad():
