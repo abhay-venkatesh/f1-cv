@@ -25,7 +25,7 @@ class MNISTF1Trainer(Trainer):
         model = BasicNetF1().to(self.device)
 
         # Constants
-        num_positives = self.train_loader.dataset.num_positives
+        num_positives = train_loader.dataset.num_positives
 
         # Primal variables
         tau = torch.rand(
@@ -78,15 +78,16 @@ class MNISTF1Trainer(Trainer):
 
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
-                Y_, y_ = self.model(X)
-                y = Y[:, 1]
+                y0_, y1_ = model(X)
+                y0 = Y[:, 0]
+                y1 = Y[:, 1]
                 i = Y[:, 2]
 
                 # Loss business
-                lagrangian = lagrange(num_positives, y_, y, w, eps, tau[i],
+                lagrangian = lagrange(num_positives, y1_, y1, w, eps, tau[i],
                                       lamb[i], mu, gamma, self.device)
-                loss = F.cross_entropy(Y_,
-                                       Y) + (self.config["beta"] * lagrangian)
+                loss = (F.cross_entropy(y0_, y0) +
+                        (self.config["beta"] * lagrangian))
                 total_loss += loss.item()
 
                 # Backpropagate
@@ -100,11 +101,11 @@ class MNISTF1Trainer(Trainer):
                     eps.data)
 
                 # Cache for Dual updates
-                y = y.float()
-                y_ = y_.view(-1)
-                tau_1 += ((y * tau[i]).sum() - 1)
-                tau_eps += ((y * tau[i]).sum() - eps)
-                tau_w_y[i] += (y * (tau[i] - (w * y_))).sum()
+                y1 = y1.float()
+                y1_ = y1_.view(-1)
+                tau_1 += ((y1 * tau[i]).sum() - 1)
+                tau_eps += ((y1 * tau[i]).sum() - eps)
+                tau_w_y[i] += (y1 * (tau[i] - (w * y1_))).sum()
 
             # Dual updates
             lamb.data = lamb.data + (self.config["eta_lamb"] * tau_w_y)
@@ -122,10 +123,12 @@ class MNISTF1Trainer(Trainer):
             with torch.no_grad():
                 for X, Y in val_loader:
                     X, Y = X.to(self.device), Y.to(self.device)
-                    Y_ = model(X)
-                    _, predicted = torch.max(Y_.data, 1)
-                    total += Y.size(0)
-                    correct += (predicted == Y).sum().item()
+                    y0_, y1_ = model(X)
+                    y0 = Y[:, 0]
+                    y1 = Y[:, 1]
+                    _, predicted = torch.max(y0_.data, 1)
+                    total += y0.size(0)
+                    correct += (predicted == y0).sum().item()
             accuracy = 100. * correct / total
             self.logger.log("outer", outer, "accuracy", accuracy)
 

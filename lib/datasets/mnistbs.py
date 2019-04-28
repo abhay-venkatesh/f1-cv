@@ -1,11 +1,11 @@
 from PIL import Image
 from pathlib import Path
+from torchvision import transforms
 from torchvision.datasets import MNIST
 from tqdm import tqdm
 import cv2
 import numpy as np
 import torch
-from torchvision import transforms
 
 
 class MNISTBS(MNIST):

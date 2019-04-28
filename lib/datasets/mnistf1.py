@@ -1,5 +1,6 @@
 from PIL import Image
 from pathlib import Path
+from torchvision import transforms
 from torchvision.datasets import MNIST
 from tqdm import tqdm
 import cv2
@@ -62,9 +63,10 @@ class MNISTF1(MNIST):
         img, target = self.data[index], self.targets[index]
 
         img = Image.fromarray(img)
-
         if self.transform is not None:
             img = self.transform(img)
+        else:
+            img = transforms.ToTensor()(img)
 
         # (class, big_or_small, index)
         target = torch.tensor([int(target[0]), int(target[1]), index])
