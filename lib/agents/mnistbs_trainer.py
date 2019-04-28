@@ -26,10 +26,10 @@ class MNISTBSTrainer(Trainer):
             model.parameters(), lr=self.config["learning rate"])
 
         # Load checkpoint if exists
-        self._load_checkpoint(model)
+        start_epochs = self._load_checkpoint(model)
 
         # Dataset
-        for epoch in tqdm(range(self.config["epochs"])):
+        for epoch in tqdm(range(start_epochs, self.config["epochs"])):
             total_loss = 0
             model.train()
             for X, Y in tqdm(train_loader):
@@ -67,4 +67,4 @@ class MNISTBSTrainer(Trainer):
             self.logger.graph()
 
             # Checkpoint
-            self._save_checkpoint(epoch, model, retain=True)
+            self._save_checkpoint(epoch, model, retain=False)
