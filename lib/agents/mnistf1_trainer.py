@@ -175,6 +175,8 @@ class MNISTF1Trainer(Trainer):
                     # Lambda and gamma updates
                     y1 = y1.float()
                     y1_ = y1_.view(-1)
+                    
+                    # TODO: Check these updates
                     lamb[i].data += (
                         self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
                     gamma[i].data += (
