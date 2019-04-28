@@ -34,6 +34,7 @@ class Logger:
         ax.set_xlabel(Path(filename).stem.split("_")[0])
         ax.set_ylabel(Path(filename).stem.split("_")[1])
         plt.savefig(Path(self.folder, Path(filename).stem + ".png"))
+        plt.close(fig)
 
     def _load(self, filename):
         xs, ys = [], []

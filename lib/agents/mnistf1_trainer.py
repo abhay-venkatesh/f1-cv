@@ -63,15 +63,17 @@ class MNISTF1Trainer(Trainer):
         # Dataset iterator
         train_iter = iter(train_loader)
 
+        # Count epochs, and cache losses
+        epochs = 0
+        total_loss = 0
+        total_t1_loss = 0
+        total_t2_loss = 0
+
         # Train
         for outer in tqdm(range(self.config["n_outer"])):
             model.train()
 
-            # Cache losses
-            total_loss = 0
-            total_t1_loss = 0
-            total_t2_loss = 0
-            for _ in tqdm(range(self.config["n_inner"])):
+            for inner in tqdm(range(self.config["n_inner"])):
                 # Sample
                 try:
                     X, Y = next(train_iter)
@@ -107,6 +109,43 @@ class MNISTF1Trainer(Trainer):
                     torch.zeros(1, dtype=torch.float, device=self.device),
                     eps.data)
 
+                # Log and validate per epoch
+                if (inner + 1) % len(train_loader) == 0:
+                    epochs += 1
+
+                    # Log loss
+                    avg_loss = total_loss / len(train_loader)
+                    avg_t1_loss = total_t1_loss / len(train_loader)
+                    avg_t2_loss = total_t2_loss / len(train_loader)
+                    total_loss = 0
+                    total_t1_loss = 0
+                    total_t2_loss = 0
+                    self.logger.log("epochs", epochs, "loss", avg_loss)
+                    self.logger.log("epochs", epochs, "t1loss", avg_t1_loss)
+                    self.logger.log("epochs", epochs, "t2loss", avg_t2_loss)
+
+                    # Validate
+                    model.eval()
+                    total = 0
+                    correct = 0
+                    with torch.no_grad():
+                        for X, Y in val_loader:
+                            X, Y = X.to(self.device), Y.to(self.device)
+                            y0_, y1_ = model(X)
+                            y0 = Y[:, 0]
+                            y1 = Y[:, 1]
+                            _, predicted = torch.max(y0_.data, 1)
+                            total += y0.size(0)
+                            correct += (predicted == y0).sum().item()
+                    accuracy = 100. * correct / total
+                    self.logger.log("epochs", epochs, "accuracy", accuracy)
+
+                    # Graph
+                    self.logger.graph()
+
+                    # Checkpoint
+                    self._save_checkpoint(epochs, model, retain=True)
+
             # Dual Updates
             with torch.no_grad():
                 mu_cache = 0
@@ -118,7 +157,7 @@ class MNISTF1Trainer(Trainer):
                     i = Y[:, 2]
 
                     # Cache for mu update
-                    mu.data += tau[i].sum()
+                    mu_cache += tau[i].sum()
 
                     # Lambda and gamma updates
                     y1 = y1.float()
@@ -129,33 +168,3 @@ class MNISTF1Trainer(Trainer):
                         self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
                 # mu updates
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)
-
-            # Log loss
-            avg_loss = total_loss / self.config["n_inner"]
-            avg_t1_loss = total_t1_loss / self.config["n_inner"]
-            avg_t2_loss = total_t2_loss / self.config["n_inner"]
-            self.logger.log("outer", outer, "loss", avg_loss)
-            self.logger.log("outer", outer, "t1loss", avg_t1_loss)
-            self.logger.log("outer", outer, "t2loss", avg_t2_loss)
-
-            # Validate
-            model.eval()
-            total = 0
-            correct = 0
-            with torch.no_grad():
-                for X, Y in val_loader:
-                    X, Y = X.to(self.device), Y.to(self.device)
-                    y0_, y1_ = model(X)
-                    y0 = Y[:, 0]
-                    y1 = Y[:, 1]
-                    _, predicted = torch.max(y0_.data, 1)
-                    total += y0.size(0)
-                    correct += (predicted == y0).sum().item()
-            accuracy = 100. * correct / total
-            self.logger.log("outer", outer, "accuracy", accuracy)
-
-            # Graph
-            self.logger.graph()
-
-            # Checkpoint
-            self._save_checkpoint(outer, model, retain=True)
