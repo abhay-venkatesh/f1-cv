@@ -1,5 +1,0 @@
-agent: MNISTBSTrainer
-dataset path: D:\code\data\filtered_datasets\mnistbs
-learning rate: 0.001
-batch size: 100
-epochs: 20

@@ -32,7 +32,7 @@ class MNISTBSTrainer(Trainer):
         for epoch in tqdm(range(self.config["epochs"])):
             total_loss = 0
             model.train()
-            for X, Y in train_loader:
+            for X, Y in tqdm(train_loader):
 
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
