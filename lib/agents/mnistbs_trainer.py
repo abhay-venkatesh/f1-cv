@@ -29,7 +29,7 @@ class MNISTBSTrainer(Trainer):
         self._load_checkpoint(model)
 
         # Dataset
-        for outer in tqdm(range(self.config["epochs"])):
+        for epoch in tqdm(range(self.config["epochs"])):
             total_loss = 0
             model.train()
             for X, Y in train_loader:
@@ -47,7 +47,7 @@ class MNISTBSTrainer(Trainer):
 
             # Log loss
             avg_loss = total_loss / len(train_loader)
-            self.logger.log("epoch", outer, "loss", avg_loss)
+            self.logger.log("epoch", epoch, "loss", avg_loss)
 
             # Validate
             model.eval()
@@ -61,10 +61,10 @@ class MNISTBSTrainer(Trainer):
                     total += Y.size(0)
                     correct += (predicted == Y).sum().item()
             accuracy = 100. * correct / total
-            self.logger.log("outer", outer, "accuracy", accuracy)
+            self.logger.log("epoch", epoch, "accuracy", accuracy)
 
             # Graph
             self.logger.graph()
 
             # Checkpoint
-            self._save_checkpoint(outer, model, retain=True)
+            self._save_checkpoint(epoch, model, retain=True)
