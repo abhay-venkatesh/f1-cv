@@ -41,5 +41,6 @@ class BasicNetF1(nn.Module):
         out = self.layer1(x)
         out = self.layer2(out)
         out = out.reshape(out.size(0), -1)
-        out = self.fc(out)
-        return out
+        out1 = self.fc1(out)
+        out2 = self.fc2(out)
+        return out1, out2

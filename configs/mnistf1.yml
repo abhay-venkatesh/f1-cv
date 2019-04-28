@@ -5,3 +5,12 @@ learning rate: 0.001
 batch size: 100
 n_outer: 5
 n_inner: 1200
+
+# Dual Ascent Parameters
+eta_tau: 0.001
+eta_eps: 0.001
+eta_lamb: 0.001
+eta_mu: 0.001
+eta_w: 0.001
+eta_gamma: 0.001
+beta: 0.001

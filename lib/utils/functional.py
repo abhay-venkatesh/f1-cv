@@ -34,3 +34,22 @@ def get_iou(outputs, labels):
         20 * (iou - 0.5), 0,
         10).ceil() / 10  # This is equal to comparing with thresolds
     return thresholded.mean()
+
+
+def lagrange(num_pos, y_, y, w, eps, tau, lamb, mu, gamma, device):
+    y = y.float()
+    y_ = y_.squeeze()
+
+    neutral = (num_pos * eps)
+
+    neg = torch.max(
+        torch.zeros(y_.shape, dtype=torch.float, device=device),
+        eps + (w * y_))
+    neg = (abs(1 - y) * neg).sum()
+    neg /= (len(y) - y.sum())
+
+    pos = mu * ((y * tau).sum() - 1)
+    pos += (y * lamb * (tau - (w * y_))).sum()
+    pos += gamma * ((y * tau).sum() - eps)
+    pos /= y.sum()
+    return neutral + neg + pos
