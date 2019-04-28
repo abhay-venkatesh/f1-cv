@@ -10,20 +10,20 @@ import torch
 
 
 class COCOStuffF1Trainer(Trainer):
-    def train(self):
+    def run(self):
         # Training dataset
         trainset = COCOStuffF1(
-            Path(self.experiment.config["dataset path"], "train"))
+            Path(self.config["dataset path"], "train"))
         train_loader = DataLoader(
             dataset=trainset,
-            batch_size=self.experiment.config["batch size"],
+            batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
         valset = COCOStuffF1(
-            Path(self.experiment.config["dataset path"], "val"))
+            Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
-            dataset=valset, batch_size=self.experiment.config["batch size"])
+            dataset=valset, batch_size=self.config["batch size"])
 
         # Constants
         num_positives = self.train_loader.dataset.num_positives
@@ -67,7 +67,7 @@ class COCOStuffF1Trainer(Trainer):
         # Model and optimizer
         model = get_model(n_classes=trainset.N_CLASSES).to(self.device)
         optimizer = torch.optim.Adam(
-            var_list, lr=self.experiment.config["learning rate"])
+            var_list, lr=self.config["learning rate"])
 
         # Dataset iterator
         train_iter = iter(train_loader)
@@ -144,5 +144,5 @@ class COCOStuffF1Trainer(Trainer):
             # Checkpoint
             torch.save(
                 model.state_dict(),
-                Path(self.experiment.checkpoints_folder,
+                Path(self.checkpoints_folder,
                      str(epoch + 1) + ".ckpt"))
