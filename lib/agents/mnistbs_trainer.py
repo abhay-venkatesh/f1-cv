@@ -1,3 +1,4 @@
+from lib.agents.trainer import Trainer
 from lib.datasets.mnistbs import MNISTBS
 from lib.models.basicnet import BasicNet
 from torch.utils.data import DataLoader
@@ -6,7 +7,7 @@ import torch
 import torch.nn.functional as F
 
 
-class MNISTBSTrainer:
+class MNISTBSTrainer(Trainer):
     def run(self):
         # Training set
         trainset = MNISTBS(
@@ -26,7 +27,7 @@ class MNISTBSTrainer:
 
         # Dataset
         train_iter = iter(train_loader)
-        for outer in tqdm(range(self.start_epochs, self.config["n_outer"])):
+        for outer in tqdm(range(self.config["n_outer"])):
             total_loss = 0
             model.train()
             for _ in tqdm(range(self.config["n_inner"])):
@@ -40,6 +41,8 @@ class MNISTBSTrainer:
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
                 Y_ = model(X)
+                print(Y_.shape)
+                print(Y.shape)
                 loss = F.cross_entropy(Y_, Y)
                 total_loss += loss.item()
 
@@ -54,16 +57,14 @@ class MNISTBSTrainer:
 
             # Validate
             model.eval()
-            avg_test_loss = 0
+            total = 0
             correct = 0
             with torch.no_grad():
                 for X, Y in val_loader:
                     X, Y = X.to(self.device), Y.to(self.device)
                     Y_ = self.model(X)
-                    avg_test_loss += self.loss_fn(Y_, Y).item()
-                    pred = Y_.argmax(dim=1, keepdim=True)
-                    Y_class = Y[:, 0]
-                    correct += pred.eq(Y_class.view_as(pred)).sum().item()
-            avg_test_loss /= len(self.val_loader)
-            accuracy = 100. * correct / len(self.val_loader)
+                    _, predicted = torch.max(Y_.data, 1)
+                    total += Y.size(0)
+                    correct += (predicted == Y).sum().item()
+            accuracy = 100. * correct / total
             self.logger.log("outer", outer, "accuracy", accuracy)

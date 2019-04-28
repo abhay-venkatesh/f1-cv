@@ -68,9 +68,5 @@ class MNISTBS(MNIST):
             img = self.transform(img)
         else:
             img = transforms.ToTensor()(img)
-        if self.target_transform is not None:
-            target = self.target_transform(target)
-        else:
-            target = transforms.ToTensor()(target)
 
         return img, target
