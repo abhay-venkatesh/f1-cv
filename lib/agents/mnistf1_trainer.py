@@ -105,9 +105,6 @@ class MNISTF1Trainer(Trainer):
 
             # Dual Updates
             mu_cache = 0
-            lamb_cache = torch.zeros(len(train_loader.dataset)).to(self.device)
-            gamma_cache = torch.zeros(len(train_loader.dataset)).to(
-                self.device)
             for X, Y in tqdm(train_loader):
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
@@ -117,20 +114,18 @@ class MNISTF1Trainer(Trainer):
                 i = Y[:, 2]
 
                 # Cache for mu update
-                mu_cache += tau[i].sum()
+                mu.data += tau[i].sum()
 
                 # Lambda and gamma updates
                 y0 = y0.float()
                 y1_ = y1_.view(-1)
-                lamb_cache[i] += (
+                lamb[i].data += (
                     self.config["eta_lamb"] * (y0 * (tau[i] - (w * y1_))))
-                gamma_cache[i] += (
+                gamma[i].data += (
                     self.config["eta_gamma"] * (y0 * (tau[i] - eps)))
 
             # Perform updates
             mu.data += self.config["eta_mu"] * (mu_cache - 1)
-            lamb.data += lamb_cache
-            gamma.data += lamb_cache
 
             # Log loss
             avg_loss = total_loss / self.config["n_inner"]

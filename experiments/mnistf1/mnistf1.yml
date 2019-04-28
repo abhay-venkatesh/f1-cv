@@ -3,8 +3,8 @@ epochs: 10
 dataset path: D:\code\data\filtered_datasets\mnistf1
 learning rate: 0.001
 batch size: 100
-n_outer: 8
-n_inner: 16
+n_outer: 4
+n_inner: 600
 
 # Dual Ascent Parameters
 eta_tau: 0.001
