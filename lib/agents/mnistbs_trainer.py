@@ -1,10 +1,11 @@
 from lib.agents.trainer import Trainer
 from lib.datasets.mnistbs import MNISTBS
-from lib.models.basicnet import BasicNet
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torch
 import torch.nn.functional as F
+import importlib
+import inflection
 
 
 class MNISTBSTrainer(Trainer):
@@ -21,7 +22,10 @@ class MNISTBSTrainer(Trainer):
         val_loader = DataLoader(valset, batch_size=self.config["batch size"])
 
         # Model and optimizer
-        model = BasicNet().to(self.device)
+        model_module = importlib.import_module(("lib.models.{}").format(
+            inflection.underscore(self.config["model"])))
+        Model = getattr(model_module, self.config["model"])
+        model = Model().to(self.device)
         optimizer = torch.optim.SGD(
             model.parameters(), lr=self.config["learning rate"])
 
