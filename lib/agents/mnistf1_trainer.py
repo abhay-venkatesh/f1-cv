@@ -61,7 +61,9 @@ class MNISTF1Trainer(Trainer):
         optimizer = torch.optim.SGD(var_list)
 
         # Dataset iterator
-        train_iter = iter(self.train_loader)
+        train_iter = iter(train_loader)
+
+        # Train
         for outer in tqdm(range(self.config["n_outer"])):
             model.train()
             total_loss = 0
@@ -72,7 +74,7 @@ class MNISTF1Trainer(Trainer):
                 try:
                     X, Y = next(train_iter)
                 except StopIteration:
-                    train_iter = iter(self.train_loader)
+                    train_iter = iter(train_loader)
                     X, Y = next(train_iter)
 
                 # Forward computation
@@ -103,6 +105,9 @@ class MNISTF1Trainer(Trainer):
 
             # Dual Updates
             mu_cache = 0
+            lamb_cache = torch.zeros(len(train_loader.dataset)).to(self.device)
+            gamma_cache = torch.zeros(len(train_loader.dataset)).to(
+                self.device)
             for X, Y in tqdm(train_loader):
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
@@ -111,10 +116,21 @@ class MNISTF1Trainer(Trainer):
                 y1 = Y[:, 1]
                 i = Y[:, 2]
 
+                # Cache for mu update
                 mu_cache += tau[i].sum()
-                lamb[i] += self.config["eta_lamb"] * (tau[i] - (w * y1_))
-                gamma[i] += self.config["eta_gamma"] * (tau[i] - eps)
-            mu += self.config["eta_mu"] * (mu_cache - 1)
+
+                # Lambda and gamma updates
+                y0 = y0.float()
+                y1_ = y1_.view(-1)
+                lamb_cache[i] += (
+                    self.config["eta_lamb"] * (y0 * (tau[i] - (w * y1_))))
+                gamma_cache[i] += (
+                    self.config["eta_gamma"] * (y0 * (tau[i] - eps)))
+
+            # Perform updates
+            mu.data += self.config["eta_mu"] * (mu_cache - 1)
+            lamb.data += lamb_cache
+            gamma.data += lamb_cache
 
             # Log loss
             avg_loss = total_loss / self.config["n_inner"]
