@@ -41,13 +41,13 @@ class MNISTF1Trainer(Trainer):
         lamb.fill_(0.001)
         mu = torch.zeros(1, device=self.device)
         mu.fill_(0.001)
-        gamma = torch.zeros(1, device=self.device)
+        gamma = torch.zeros(len(train_loader.dataset), device=self.device)
         gamma.fill_(0.001)
 
         # Temporary variables for dual updates
-        tau_1 = 0.0
-        tau_eps = 0.0
-        tau_w_y = torch.zeros(len(train_loader.dataset)).to(self.device)
+        mu_cache = 0.0
+        lamb_cache = torch.zeros(len(train_loader.dataset)).to(self.device)
+        gamma_cache = torch.zeros(len(train_loader.dataset)).to(self.device)
 
         # Primal Optimization
         var_list = [{
@@ -65,64 +65,60 @@ class MNISTF1Trainer(Trainer):
         }]
         optimizer = torch.optim.SGD(var_list)
 
-        # Dataset iterator
-        train_iter = iter(train_loader)
-
         for outer in tqdm(range(self.config["n_outer"])):
             total_loss = 0
             model.train()
             total_t1_loss = 0
             total_t2_loss = 0
             for _ in tqdm(range(self.config["n_inner"])):
-                # Sample
-                try:
-                    X, Y = next(train_iter)
-                except StopIteration:
-                    train_iter = iter(train_loader)
-                    X, Y = next(train_iter)
+                for X, Y in train_loader:
+                    # Forward computation
+                    X, Y = X.to(self.device), Y.to(self.device)
+                    y0_, y1_ = model(X)
+                    y0 = Y[:, 0]
+                    y1 = Y[:, 1]
+                    i = Y[:, 2]
 
-                # Forward computation
-                X, Y = X.to(self.device), Y.to(self.device)
-                y0_, y1_ = model(X)
-                y0 = Y[:, 0]
-                y1 = Y[:, 1]
-                i = Y[:, 2]
+                    # Loss business
+                    t1_loss = F.cross_entropy(y0_, y0)
+                    total_t1_loss += t1_loss.item()
+                    t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
+                                       lamb[i], mu, gamma[i], self.device)
+                    total_t2_loss += t2_loss.item()
+                    loss = t1_loss + (self.config["beta"] * t2_loss)
+                    total_loss += loss.item()
 
-                # Loss business
-                t1_loss = F.cross_entropy(y0_, y0)
-                total_t1_loss += t1_loss.item()
-                t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
-                                   lamb[i], mu, gamma, self.device)
-                total_t2_loss += t2_loss.item()
-                loss = t1_loss + (self.config["beta"] * t2_loss)
-                total_loss += loss.item()
+                    # Backpropagate
+                    loss.backward()
+                    optimizer.step()
+                    optimizer.zero_grad()
 
-                # Backpropagate
-                loss.backward()
-                optimizer.step()
-                optimizer.zero_grad()
+                    # Project eps to ensure non-negativity
+                    eps.data = torch.max(
+                        torch.zeros(1, dtype=torch.float, device=self.device),
+                        eps.data)
 
-                # Project eps to ensure non-negativity
-                eps.data = torch.max(
-                    torch.zeros(1, dtype=torch.float, device=self.device),
-                    eps.data)
+                    # Cache for Dual updates
+                    y1 = y1.float()
+                    y1_ = y1_.view(-1)
 
-                # Cache for Dual updates
-                y1 = y1.float()
-                y1_ = y1_.view(-1)
-                tau_1 += ((y1 * tau[i]).sum() - 1)
-                tau_eps += ((y1 * tau[i]).sum() - eps)
-                tau_w_y[i] += (y1 * (tau[i] - (w * y1_))).sum()
+                    mu_cache += (y1 * tau[i]).sum()
+                    lamb_cache[i] = (tau[i] - (w * y1_))
+                    gamma_cache[i] = (tau[i] - eps)
 
-            # Dual updates
-            lamb.data = lamb.data + (self.config["eta_lamb"] * tau_w_y)
-            mu.data = mu.data + (self.config["eta_mu"] * tau_1)
-            gamma.data = gamma.data + (self.config["eta_gamma"] * tau_eps)
+                # Dual updates
+                mu.data = mu.data + (self.config["eta_mu"] * (mu_cache - 1))
+                lamb.data = lamb.data + (self.config["eta_lamb"] * lamb_cache)
+                gamma.data = gamma.data + (
+                    self.config["eta_gamma"] * gamma_cache)
 
             # Log loss
-            avg_loss = total_loss / self.config["n_inner"]
-            avg_t1_loss = total_t1_loss / self.config["n_inner"]
-            avg_t2_loss = total_t2_loss / self.config["n_inner"]
+            avg_loss = total_loss / (
+                self.config["n_inner"] * len(train_loader))
+            avg_t1_loss = total_t1_loss / (
+                self.config["n_inner"] * len(train_loader))
+            avg_t2_loss = total_t2_loss / (
+                self.config["n_inner"] * len(train_loader))
             self.logger.log("outer", outer, "loss", avg_loss)
             self.logger.log("outer", outer, "t1loss", avg_t1_loss)
             self.logger.log("outer", outer, "t2loss", avg_t2_loss)

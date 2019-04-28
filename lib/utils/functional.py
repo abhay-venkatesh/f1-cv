@@ -37,19 +37,23 @@ def get_iou(outputs, labels):
 
 
 def lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma, device):
+    # Reshape
     y1 = y1.float()
     y1_ = y1_.squeeze()
 
+    # Term that is not associated with either positive or negative examples
     neutral = (num_pos * eps)
 
+    # Negative example terms
     neg = torch.max(
         torch.zeros(y1_.shape, dtype=torch.float, device=device),
         eps + (w * y1_))
     neg = (abs(1 - y1) * neg).sum()
     neg /= (len(y1) - y1.sum())
 
+    # Positive example terms
     pos = mu * ((y1 * tau).sum() - 1)
     pos += (y1 * lamb * (tau - (w * y1_))).sum()
-    pos += gamma * ((y1 * tau).sum() - eps)
+    pos += (y1 * gamma * (tau - eps)).sum()
     pos /= y1.sum()
     return neutral + neg + pos
