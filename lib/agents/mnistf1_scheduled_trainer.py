@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 
 
-class MNISTF1Trainer(Trainer):
+class MNISTF1ScheduledTrainer(Trainer):
     def run(self):
         # Training set
         trainset = MNISTF1(
@@ -160,9 +160,10 @@ class MNISTF1Trainer(Trainer):
                     self._save_checkpoint(epochs, model, retain=True)
 
             # Dual Updates
-            lamb_cache = lamb.clone().detach()
             with torch.no_grad():
                 mu_cache = 0
+                lamb_cache = torch.zeros_like(lamb)
+                gamma_cache = torch.zeros_like(gamma)
                 for X, Y in tqdm(train_loader):
                     # Forward computation
                     X, Y = X.to(self.device), Y.to(self.device)
@@ -177,14 +178,15 @@ class MNISTF1Trainer(Trainer):
                     y1 = y1.float()
                     y1_ = y1_.view(-1)
 
-                    # TODO: These updates are not happening
-                    lamb[i].data += (
+                    lamb_cache[i] += (
                         self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
-                    gamma[i].data += (
+                    gamma_cache[i] += (
                         self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
-                # mu updates
+
+                # Update data
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)
-            print((lamb_cache == lamb).sum())
+                lamb.data += lamb_cache
+                gamma.data += gamma_cache
 
             # Schedule n_inner
             n_inner = schedule_n_inner(n_inner)
