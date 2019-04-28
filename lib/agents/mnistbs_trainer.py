@@ -29,17 +29,10 @@ class MNISTBSTrainer(Trainer):
         self._load_checkpoint(model)
 
         # Dataset
-        train_iter = iter(train_loader)
-        for outer in tqdm(range(self.config["n_outer"])):
+        for outer in tqdm(range(self.config["epochs"])):
             total_loss = 0
             model.train()
-            for _ in tqdm(range(self.config["n_inner"])):
-                # Sample
-                try:
-                    X, Y = next(train_iter)
-                except StopIteration:
-                    train_iter = iter(train_loader)
-                    X, Y = next(train_iter)
+            for X, Y in train_loader:
 
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
