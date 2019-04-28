@@ -89,7 +89,7 @@ class MNISTF1Trainer(Trainer):
                 # Compute loss
                 t1_loss = F.cross_entropy(y0_, y0)
                 t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
-                                   lamb[i], mu, gamma[i], self.device)
+                                   lamb[i], mu, gamma[i])
                 loss = t1_loss + (self.config["beta"] * t2_loss)
 
                 # Store losses for logging
