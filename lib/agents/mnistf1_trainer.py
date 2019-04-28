@@ -1,5 +1,5 @@
 from lib.agents.trainer import Trainer
-from lib.datasets.mnistbs import MNISTBS
+from lib.datasets.mnistf1 import MNISTF1
 from lib.models.basicnet import BasicNet
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -7,29 +7,62 @@ import torch
 import torch.nn.functional as F
 
 
-class MNISTBSTrainer(Trainer):
+class MNISTF1Trainer(Trainer):
     def run(self):
         # Training set
-        trainset = MNISTBS(
+        trainset = MNISTF1(
             self.config["dataset path"], train=True, download=True)
         train_loader = DataLoader(
             trainset, shuffle=True, batch_size=self.config["batch size"])
 
         # Validation set
-        valset = MNISTBS(
+        valset = MNISTF1(
             self.config["dataset path"], train=False, download=True)
         val_loader = DataLoader(valset, batch_size=self.config["batch size"])
 
-        # Model and optimizer
-        model = BasicNet().to(self.device)
-        optimizer = torch.optim.SGD(
-            model.parameters(), lr=self.config["learning rate"])
+        # Constants
+        num_positives = self.train_loader.dataset.num_positives
 
-        # Load checkpoint if exists
-        self._load_checkpoint(model)
+        # Primal variables
+        tau = torch.rand(
+            len(train_loader.dataset),
+            device=self.device,
+            requires_grad=True)
+        eps = torch.rand(1, device=self.device, requires_grad=True)
+        w = torch.rand(1, device=self.device, requires_grad=True)
 
-        # Dataset
+        # Dual variables
+        lamb = torch.zeros(len(train_loader.dataset), device=self.device)
+        lamb.fill_(0.001)
+        mu = torch.zeros(1, device=self.device)
+        mu.fill_(0.001)
+        gamma = torch.zeros(1, device=self.device)
+        gamma.fill_(0.001)
+
+        # Temporary variables for dual updates
+        tau_1 = 0.0
+        tau_eps = 0.0
+        tau_w_y = torch.zeros(len(train_loader.dataset)).to(self.device)
+
+        # Primal Optimization
+        var_list = [{
+            "params": self.model.parameters(),
+            "lr": self.config["lr"]
+        }, {
+            "params": tau,
+            "lr": self.config["eta_tau"]
+        }, {
+            "params": eps,
+            "lr": self.config["eta_eps"]
+        }, {
+            "params": w,
+            "lr": self.config["eta_w"]
+        }]
+        optimizer = optim.SGD(var_list)
+
+        # Dataset iterator
         train_iter = iter(train_loader)
+
         for outer in tqdm(range(self.config["n_outer"])):
             total_loss = 0
             model.train()
@@ -70,8 +103,4 @@ class MNISTBSTrainer(Trainer):
             accuracy = 100. * correct / total
             self.logger.log("outer", outer, "accuracy", accuracy)
 
-            # Graph
             self.logger.graph()
-
-            # Checkpoint
-            self._save_checkpoint(outer, model, retain=True)
