@@ -60,9 +60,11 @@ class MNISTBSTrainer(Trainer):
             with torch.no_grad():
                 for X, Y in val_loader:
                     X, Y = X.to(self.device), Y.to(self.device)
-                    Y_ = self.model(X)
+                    Y_ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
                     total += Y.size(0)
                     correct += (predicted == Y).sum().item()
             accuracy = 100. * correct / total
             self.logger.log("outer", outer, "accuracy", accuracy)
+            
+            self.logger.graph()
