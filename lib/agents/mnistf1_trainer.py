@@ -86,12 +86,14 @@ class MNISTF1Trainer(Trainer):
 
                 # Compute loss
                 t1_loss = F.cross_entropy(y0_, y0)
-                total_t1_loss += t1_loss.item()
                 t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
                                    lamb[i], mu, gamma[i], self.device)
-                total_t2_loss += t2_loss.item()
                 loss = t1_loss + (self.config["beta"] * t2_loss)
+
+                # Store losses for logging
                 total_loss += loss.item()
+                total_t1_loss += t1_loss.item()
+                total_t2_loss += t2_loss.item()
 
                 # Backpropagate
                 loss.backward()
@@ -104,28 +106,27 @@ class MNISTF1Trainer(Trainer):
                     eps.data)
 
             # Dual Updates
-            mu_cache = 0
-            for X, Y in tqdm(train_loader):
-                # Forward computation
-                X, Y = X.to(self.device), Y.to(self.device)
-                y0_, y1_ = model(X)
-                y0 = Y[:, 0]
-                y1 = Y[:, 1]
-                i = Y[:, 2]
+            with torch.no_grad():
+                mu_cache = 0
+                for X, Y in tqdm(train_loader):
+                    # Forward computation
+                    X, Y = X.to(self.device), Y.to(self.device)
+                    _, y1_ = model(X)
+                    y1 = Y[:, 1]
+                    i = Y[:, 2]
 
-                # Cache for mu update
-                mu.data += tau[i].sum()
+                    # Cache for mu update
+                    mu.data += tau[i].sum()
 
-                # Lambda and gamma updates
-                y0 = y0.float()
-                y1_ = y1_.view(-1)
-                lamb[i].data += (
-                    self.config["eta_lamb"] * (y0 * (tau[i] - (w * y1_))))
-                gamma[i].data += (
-                    self.config["eta_gamma"] * (y0 * (tau[i] - eps)))
-
-            # Perform updates
-            mu.data += self.config["eta_mu"] * (mu_cache - 1)
+                    # Lambda and gamma updates
+                    y1 = y1.float()
+                    y1_ = y1_.view(-1)
+                    lamb[i].data += (
+                        self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
+                    gamma[i].data += (
+                        self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
+                # mu updates
+                mu.data += self.config["eta_mu"] * (mu_cache - 1)
 
             # Log loss
             avg_loss = total_loss / self.config["n_inner"]
