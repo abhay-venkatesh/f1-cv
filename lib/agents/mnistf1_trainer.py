@@ -69,11 +69,24 @@ class MNISTF1Trainer(Trainer):
         total_t1_loss = 0
         total_t2_loss = 0
 
+        # Define inner epochs schedule
+        def schedule_n_inner(n_inner):
+            if n_inner == self.config["n_inner"]:
+                return n_inner
+            else:
+                return n_inner + 100
+
+        # Initialize inner epochs
+        n_inner = 100
+        step = 0
+
         # Train
         for outer in tqdm(range(self.config["n_outer"])):
             model.train()
 
-            for inner in tqdm(range(self.config["n_inner"])):
+            for inner in tqdm(range(n_inner)):
+                step += 1
+
                 # Sample
                 try:
                     X, Y = next(train_iter)
@@ -110,7 +123,7 @@ class MNISTF1Trainer(Trainer):
                     eps.data)
 
                 # Log and validate per epoch
-                if (inner + 1) % len(train_loader) == 0:
+                if (step + 1) % len(train_loader) == 0:
                     epochs += 1
 
                     # Log loss
@@ -168,3 +181,6 @@ class MNISTF1Trainer(Trainer):
                         self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
                 # mu updates
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)
+
+            # Schedule n_inner
+            n_inner = schedule_n_inner(n_inner)
