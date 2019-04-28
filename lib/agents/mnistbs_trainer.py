@@ -2,10 +2,10 @@ from lib.agents.agent import Agent
 from lib.datasets.mnistbs import MNISTBS
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import torch
-import torch.nn.functional as F
 import importlib
 import inflection
+import torch
+import torch.nn.functional as F
 
 
 class MNISTBSTrainer(Agent):

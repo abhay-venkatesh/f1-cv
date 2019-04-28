@@ -1,9 +1,10 @@
 from lib.agents.agent import Agent
 from lib.datasets.mnistf1 import MNISTF1
-from lib.models.basicnet import BasicNetF1
 from lib.utils.functional import lagrange
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import importlib
+import inflection
 import torch
 import torch.nn.functional as F
 
@@ -22,7 +23,10 @@ class MNISTF1Trainer(Agent):
         val_loader = DataLoader(valset, batch_size=self.config["batch size"])
 
         # Model
-        model = BasicNetF1().to(self.device)
+        model_module = importlib.import_module(("lib.models.{}").format(
+            inflection.underscore(self.config["model"])))
+        Model = getattr(model_module, self.config["model"])
+        model = Model().to(self.device)
 
         # Load checkpoint if exists
         self._load_checkpoint(model)

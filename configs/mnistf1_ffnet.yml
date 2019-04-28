@@ -1,10 +1,10 @@
 agent: MNISTF1Trainer
-epochs: 10
 dataset path: /mnt/hdd-4tb/testuser2/datasets/mnistf1
 learning rate: 0.01
 batch size: 100
-n_outer: 40
-n_inner: 600
+n_outer: 20
+n_inner: 2400
+model: FFNetF1
 
 # Normalization coefficient
 beta: 0.001
