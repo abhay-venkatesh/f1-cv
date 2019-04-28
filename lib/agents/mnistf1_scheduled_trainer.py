@@ -63,20 +63,28 @@ class MNISTF1Trainer(Trainer):
         # Dataset iterator
         train_iter = iter(train_loader)
 
-        # Count epochs and steps
+        # Count epochs, and cache losses
         epochs = 0
-        step = 0
-
-        # Cache losses
         total_loss = 0
         total_t1_loss = 0
         total_t2_loss = 0
+
+        # Define inner epochs schedule
+        def schedule_n_inner(n_inner):
+            if n_inner == self.config["n_inner"]:
+                return n_inner
+            else:
+                return n_inner + 100
+
+        # Initialize inner epochs
+        n_inner = 100
+        step = 0
 
         # Train
         for outer in tqdm(range(self.config["n_outer"])):
             model.train()
 
-            for inner in tqdm(range(self.config["n_inner"])):
+            for inner in tqdm(range(n_inner)):
                 step += 1
 
                 # Sample
@@ -152,10 +160,9 @@ class MNISTF1Trainer(Trainer):
                     self._save_checkpoint(epochs, model, retain=True)
 
             # Dual Updates
+            lamb_cache = lamb.clone().detach()
             with torch.no_grad():
                 mu_cache = 0
-                lamb_cache = torch.zeros_like(lamb)
-                gamma_cache = torch.zeros_like(gamma)
                 for X, Y in tqdm(train_loader):
                     # Forward computation
                     X, Y = X.to(self.device), Y.to(self.device)
@@ -170,12 +177,14 @@ class MNISTF1Trainer(Trainer):
                     y1 = y1.float()
                     y1_ = y1_.view(-1)
 
-                    lamb_cache[i] += (
+                    # TODO: These updates are not happening
+                    lamb[i].data += (
                         self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
-                    gamma_cache[i] += (
+                    gamma[i].data += (
                         self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
-
-                # Update data
+                # mu updates
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)
-                lamb.data += lamb_cache
-                gamma.data += gamma_cache
+            print((lamb_cache == lamb).sum())
+
+            # Schedule n_inner
+            n_inner = schedule_n_inner(n_inner)
