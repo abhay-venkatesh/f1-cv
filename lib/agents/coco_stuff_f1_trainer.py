@@ -1,7 +1,7 @@
 from lib.datasets.coco_stuff_f1 import COCOStuffF1
 from lib.models.segnet import get_model
 from lib.trainers.functional import cross_entropy2d, get_iou, lagrange
-from lib.trainers.trainer import Trainer
+from lib.trainers.agent import Agent
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
@@ -9,7 +9,7 @@ from tqdm import tqdm
 import torch
 
 
-class COCOStuffF1Trainer(Trainer):
+class COCOStuffF1Trainer(Agent):
     def run(self):
         # Training dataset
         trainset = COCOStuffF1(

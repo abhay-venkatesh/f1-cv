@@ -1,4 +1,4 @@
-from lib.agents.trainer import Trainer
+from lib.agents.agent import Agent
 from lib.datasets.mnistbs import MNISTBS
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -8,7 +8,7 @@ import importlib
 import inflection
 
 
-class MNISTBSTrainer(Trainer):
+class MNISTBSTrainer(Agent):
     def run(self):
         # Training set
         trainset = MNISTBS(

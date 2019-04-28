@@ -1,4 +1,4 @@
-from lib.agents.trainer import Trainer
+from lib.agents.agent import Agent
 from lib.datasets.mnistf1 import MNISTF1
 from lib.models.basicnet import BasicNetF1
 from lib.utils.functional import lagrange
@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 
 
-class MNISTF1Trainer(Trainer):
+class MNISTF1Trainer(Agent):
     def run(self):
         # Training set
         trainset = MNISTF1(
