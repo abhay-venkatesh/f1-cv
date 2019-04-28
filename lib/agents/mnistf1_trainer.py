@@ -66,6 +66,8 @@ class MNISTF1Trainer(Trainer):
         # Train
         for outer in tqdm(range(self.config["n_outer"])):
             model.train()
+
+            # Cache losses
             total_loss = 0
             total_t1_loss = 0
             total_t2_loss = 0
