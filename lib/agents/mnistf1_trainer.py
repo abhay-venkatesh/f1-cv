@@ -160,6 +160,7 @@ class MNISTF1Trainer(Trainer):
                     self._save_checkpoint(epochs, model, retain=True)
 
             # Dual Updates
+            lamb_cache = lamb.clone().detach()
             with torch.no_grad():
                 mu_cache = 0
                 for X, Y in tqdm(train_loader):
@@ -175,14 +176,15 @@ class MNISTF1Trainer(Trainer):
                     # Lambda and gamma updates
                     y1 = y1.float()
                     y1_ = y1_.view(-1)
-                    
-                    # TODO: Check these updates
+
+                    # TODO: These updates are not happening
                     lamb[i].data += (
                         self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
                     gamma[i].data += (
                         self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
                 # mu updates
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)
+            print((lamb_cache == lamb).sum())
 
             # Schedule n_inner
             n_inner = schedule_n_inner(n_inner)
