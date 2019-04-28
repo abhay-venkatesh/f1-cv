@@ -24,6 +24,9 @@ class MNISTF1Trainer(Trainer):
         # Model
         model = BasicNetF1().to(self.device)
 
+        # Load checkpoint if exists
+        self._load_checkpoint(model)
+
         # Constants
         num_positives = train_loader.dataset.num_positives
 
@@ -68,6 +71,8 @@ class MNISTF1Trainer(Trainer):
         for outer in tqdm(range(self.config["n_outer"])):
             total_loss = 0
             model.train()
+            total_t1_loss = 0
+            total_t2_loss = 0
             for _ in tqdm(range(self.config["n_inner"])):
                 # Sample
                 try:
@@ -84,10 +89,12 @@ class MNISTF1Trainer(Trainer):
                 i = Y[:, 2]
 
                 # Loss business
-                lagrangian = lagrange(num_positives, y1_, y1, w, eps, tau[i],
-                                      lamb[i], mu, gamma, self.device)
-                loss = (F.cross_entropy(y0_, y0) +
-                        (self.config["beta"] * lagrangian))
+                t1_loss = F.cross_entropy(y0_, y0)
+                total_t1_loss += t1_loss.item()
+                t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
+                                   lamb[i], mu, gamma, self.device)
+                total_t2_loss += t2_loss.item()
+                loss = t1_loss + (self.config["beta"] * t2_loss)
                 total_loss += loss.item()
 
                 # Backpropagate
@@ -113,8 +120,12 @@ class MNISTF1Trainer(Trainer):
             gamma.data = gamma.data + (self.config["eta_gamma"] * tau_eps)
 
             # Log loss
-            avg_loss = total_loss / len(train_loader)
-            self.logger.log("epoch", outer, "loss", avg_loss)
+            avg_loss = total_loss / self.config["n_inner"]
+            avg_t1_loss = total_t1_loss / self.config["n_inner"]
+            avg_t2_loss = total_t2_loss / self.config["n_inner"]
+            self.logger.log("outer", outer, "loss", avg_loss)
+            self.logger.log("outer", outer, "t1loss", avg_t1_loss)
+            self.logger.log("outer", outer, "t2loss", avg_t2_loss)
 
             # Validate
             model.eval()
@@ -132,4 +143,8 @@ class MNISTF1Trainer(Trainer):
             accuracy = 100. * correct / total
             self.logger.log("outer", outer, "accuracy", accuracy)
 
+            # Graph
             self.logger.graph()
+
+            # Checkpoint
+            self._save_checkpoint(outer, model, retain=True)

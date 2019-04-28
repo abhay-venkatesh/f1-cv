@@ -36,20 +36,20 @@ def get_iou(outputs, labels):
     return thresholded.mean()
 
 
-def lagrange(num_pos, y_, y, w, eps, tau, lamb, mu, gamma, device):
-    y = y.float()
-    y_ = y_.squeeze()
+def lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma, device):
+    y1 = y1.float()
+    y1_ = y1_.squeeze()
 
     neutral = (num_pos * eps)
 
     neg = torch.max(
-        torch.zeros(y_.shape, dtype=torch.float, device=device),
-        eps + (w * y_))
-    neg = (abs(1 - y) * neg).sum()
-    neg /= (len(y) - y.sum())
+        torch.zeros(y1_.shape, dtype=torch.float, device=device),
+        eps + (w * y1_))
+    neg = (abs(1 - y1) * neg).sum()
+    neg /= (len(y1) - y1.sum())
 
-    pos = mu * ((y * tau).sum() - 1)
-    pos += (y * lamb * (tau - (w * y_))).sum()
-    pos += gamma * ((y * tau).sum() - eps)
-    pos /= y.sum()
+    pos = mu * ((y1 * tau).sum() - 1)
+    pos += (y1 * lamb * (tau - (w * y1_))).sum()
+    pos += gamma * ((y1 * tau).sum() - eps)
+    pos /= y1.sum()
     return neutral + neg + pos
