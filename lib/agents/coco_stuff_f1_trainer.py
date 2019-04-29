@@ -11,6 +11,7 @@ import torch
 
 class COCOStuffF1Trainer(Agent):
     N_CLASSES = 2
+    LEN_TRAINSET = 3654
 
     def run(self):
         # Training dataset
@@ -86,6 +87,7 @@ class COCOStuffF1Trainer(Agent):
                 except StopIteration:
                     train_iter = iter(train_loader)
                     X, y0, y1, i = next(train_iter)
+
 
                 # Forward computation
                 X, y0 = X.to(self.device), y0.long().to(self.device)
