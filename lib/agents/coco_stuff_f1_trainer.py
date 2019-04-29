@@ -88,7 +88,6 @@ class COCOStuffF1Trainer(Agent):
                     train_iter = iter(train_loader)
                     X, y0, y1, i = next(train_iter)
 
-
                 # Forward computation
                 X, y0 = X.to(self.device), y0.long().to(self.device)
                 y1, i = y1.to(self.device), i.to(self.device)
