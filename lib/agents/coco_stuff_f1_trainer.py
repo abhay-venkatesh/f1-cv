@@ -1,7 +1,7 @@
+from lib.agents.agent import Agent
 from lib.datasets.coco_stuff_f1 import COCOStuffF1
-from lib.models.segnet import get_model
-from lib.trainers.agent import Agent
-from lib.trainers.functional import cross_entropy2d, get_iou, lagrange
+from lib.models.seg_net import SegNetF1
+from lib.utils.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
@@ -10,6 +10,8 @@ import torch
 
 
 class COCOStuffF1Trainer(Agent):
+    N_CLASSES = 2
+
     def run(self):
         # Training dataset
         trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
@@ -22,6 +24,10 @@ class COCOStuffF1Trainer(Agent):
         valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
+
+        # Model
+        model = SegNetF1(n_classes=self.N_CLASSES).to(self.device)
+        start_epochs = self._load_checkpoint(model)
 
         # Constants
         num_positives = train_loader.dataset.num_positives
@@ -42,8 +48,8 @@ class COCOStuffF1Trainer(Agent):
 
         # Primal Optimization
         var_list = [{
-            "params": self.model.parameters(),
-            "lr": self.config["lr"]
+            "params": model.parameters(),
+            "lr": self.config["learning rate"]
         }, {
             "params": tau,
             "lr": self.config["eta_tau"]
@@ -54,13 +60,7 @@ class COCOStuffF1Trainer(Agent):
             "params": w,
             "lr": self.config["eta_w"]
         }]
-
-        # Model and optimizer
-        model = get_model(n_classes=trainset.N_CLASSES).to(self.device)
-        optimizer = torch.optim.Adam(var_list, lr=self.config["learning rate"])
-
-        # Load checkpoint if exists
-        start_epochs = self._load_checkpoint(model)
+        optimizer = torch.optim.SGD(var_list)
 
         # Dataset iterator
         train_iter = iter(train_loader)
@@ -82,17 +82,15 @@ class COCOStuffF1Trainer(Agent):
 
                 # Sample
                 try:
-                    X, Y = next(train_iter)
+                    X, y0, y1, i = next(train_iter)
                 except StopIteration:
                     train_iter = iter(train_loader)
-                    X, Y = next(train_iter)
+                    X, y0, y1, i = next(train_iter)
 
                 # Forward computation
-                X, Y = X.to(self.device), Y.to(self.device)
+                X, y0 = X.to(self.device), y0.long().to(self.device)
+                y1, i = y1.to(self.device), i.to(self.device)
                 y0_, y1_ = model(X)
-                y0 = Y[:, 0]
-                y1 = Y[:, 1]
-                i = Y[:, 2]
 
                 # Compute loss
                 t1_loss = cross_entropy2d(y0_, y0)
@@ -134,13 +132,12 @@ class COCOStuffF1Trainer(Agent):
                     model.eval()
                     ious = []
                     with torch.no_grad():
-                        for images, labels in val_loader:
-                            images = images.to(self.device)
-                            labels = labels[0].long()
-                            labels = labels.to(self.device)
-                            outputs = model(images)
-                            _, predicted = torch.max(outputs.data, 1)
-                            iou = get_iou(predicted, labels)
+                        for X, y0, _, _ in val_loader:
+                            X, y0 = X.to(self.device), y0.long().to(
+                                self.device)
+                            y0_, _ = model(X)
+                            _, predicted = torch.max(y0_.data, 1)
+                            iou = get_iou(predicted, y0)
                             ious.append(iou.item())
 
                     # Log mean IOU
@@ -158,12 +155,11 @@ class COCOStuffF1Trainer(Agent):
                 mu_cache = 0
                 lamb_cache = torch.zeros_like(lamb)
                 gamma_cache = torch.zeros_like(gamma)
-                for X, Y in tqdm(train_loader):
+                for X, y0, y1, i in tqdm(train_loader):
                     # Forward computation
-                    X, Y = X.to(self.device), Y.to(self.device)
-                    _, y1_ = model(X)
-                    y1 = Y[:, 1]
-                    i = Y[:, 2]
+                    X, y0 = X.to(self.device), y0.long().to(self.device)
+                    y1, i = y1.to(self.device), i.to(self.device)
+                    y0_, y1_ = model(X)
 
                     # Cache for mu update
                     mu_cache += tau[i].sum()

@@ -23,8 +23,9 @@ class COCOStuffF1(data.Dataset):
 
     def _build(self):
         self.f1_classes = []
+        self.num_positives = 0
         print("Building dataset... ")
-        for i, img_name in tqdm(enumerate(self.img_names)):
+        for img_name in tqdm(self.img_names):
             seg_name = img_name.replace(".jpg", ".png")
             seg_path = Path(self.root, "targets", seg_name)
             seg = Image.open(seg_path)
@@ -33,18 +34,12 @@ class COCOStuffF1(data.Dataset):
                 seg_array.shape[0] * seg_array.shape[1])
 
             if fraction < 0.6:
-                self.f1_classes[i] = 0
+                self.f1_classes.append(0)
             else:
-                self.f1_classes[i] = 1
+                self.f1_classes.append(1)
+                self.num_positives += 1
 
     def __getitem__(self, index):
-        """
-        Args:
-            index (int): Index
-        Returns:
-            tuple: Tuple (image, target). target is a list of captions for the
-                   image.
-        """
         img_name = self.img_names[index]
         img_path = Path(self.root, "images", img_name)
         img = Image.open(img_path).convert('RGB')
@@ -56,7 +51,7 @@ class COCOStuffF1(data.Dataset):
         seg_array = np.array(seg)
         seg = torch.from_numpy(seg_array)
 
-        return img, (seg, self.f1_classes[index], index)
+        return img, seg, self.f1_classes[index], index
 
     def __len__(self):
         return len(self.img_names)

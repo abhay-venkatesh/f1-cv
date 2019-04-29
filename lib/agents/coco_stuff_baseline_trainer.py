@@ -40,7 +40,6 @@ class COCOStuffBaselineTrainer(Agent):
                 loss.backward()
                 optimizer.step()
                 optimizer.zero_grad()
-                break
             avg_loss = total_loss / len(train_loader)
             self.logger.log("epoch", epoch, "loss", avg_loss)
 
