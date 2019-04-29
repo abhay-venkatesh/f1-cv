@@ -69,7 +69,11 @@ class SegNetUp3(nn.Module):
 
 
 class SegNet(nn.Module):
-    def __init__(self, n_classes=21, in_channels=3, is_unpooling=True):
+    def __init__(self,
+                 n_classes=21,
+                 in_channels=3,
+                 is_unpooling=True,
+                 init_vgg16_params=True):
         super(SegNet, self).__init__()
 
         self.in_channels = in_channels
@@ -86,6 +90,10 @@ class SegNet(nn.Module):
         self.up3 = SegNetUp3(256, 128)
         self.up2 = SegNetUp2(128, 64)
         self.up1 = SegNetUp2(64, n_classes)
+
+        if init_vgg16_params:
+            vgg16 = models.vgg16(pretrained=True)
+            self.init_vgg16_params(vgg16)
 
     def forward(self, inputs):
 
@@ -137,14 +145,3 @@ class SegNet(nn.Module):
                 assert l1.bias.size() == l2.bias.size()
                 l2.weight.data = l1.weight.data
                 l2.bias.data = l1.bias.data
-
-
-def get_model(n_classes=21,
-              in_channels=3,
-              is_unpooling=True,
-              init_vgg16_params=True):
-    model = SegNet(n_classes, in_channels, is_unpooling)
-    if init_vgg16_params:
-        vgg16 = models.vgg16(pretrained=True)
-        model.init_vgg16_params(vgg16)
-    return model
