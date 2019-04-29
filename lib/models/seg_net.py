@@ -170,7 +170,7 @@ class SegNetF1(SegNet):
         self.up2 = SegNetUp2(128, 64)
         self.up1 = SegNetUp2(64, n_classes)
 
-        self.fc = nn.Linear(320, 1)
+        self.fc = nn.Linear(4362240, 1)
 
         if init_vgg16_params:
             vgg16 = models.vgg16(pretrained=True)
@@ -189,6 +189,7 @@ class SegNetF1(SegNet):
         up3 = self.up3(up4, indices_3, unpool_shape3)
         up2 = self.up2(up3, indices_2, unpool_shape2)
         up1 = self.up1(up2, indices_1, unpool_shape1)
+        up2 = up2.view(up2.size(0), -1)
         f1 = self.fc(up2)
 
         return up1, f1
