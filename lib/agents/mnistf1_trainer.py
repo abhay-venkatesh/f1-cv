@@ -29,7 +29,7 @@ class MNISTF1Trainer(Agent):
         model = Model().to(self.device)
 
         # Load checkpoint if exists
-        self._load_checkpoint(model)
+        start_epochs = self._load_checkpoint(model)
 
         # Constants
         num_positives = train_loader.dataset.num_positives
@@ -77,7 +77,7 @@ class MNISTF1Trainer(Agent):
         total_t2_loss = 0
 
         # Train
-        for outer in tqdm(range(self.config["n_outer"])):
+        for outer in tqdm(range(start_epochs, self.config["n_outer"])):
             model.train()
 
             for inner in tqdm(range(self.config["n_inner"])):

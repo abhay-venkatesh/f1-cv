@@ -1,7 +1,7 @@
 from lib.datasets.coco_stuff_f1 import COCOStuffF1
 from lib.models.segnet import get_model
-from lib.trainers.functional import cross_entropy2d, get_iou, lagrange
 from lib.trainers.agent import Agent
+from lib.trainers.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
@@ -12,42 +12,33 @@ import torch
 class COCOStuffF1Trainer(Agent):
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(
-            Path(self.config["dataset path"], "train"))
+        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(
-            Path(self.config["dataset path"], "val"))
+        valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
         # Constants
-        num_positives = self.train_loader.dataset.num_positives
+        num_positives = train_loader.dataset.num_positives
 
         # Primal variables
         tau = torch.rand(
-            len(self.train_loader.dataset),
-            device=self.device,
-            requires_grad=True)
+            len(train_loader.dataset), device=self.device, requires_grad=True)
         eps = torch.rand(1, device=self.device, requires_grad=True)
         w = torch.rand(1, device=self.device, requires_grad=True)
 
         # Dual variables
-        lamb = torch.zeros(len(self.train_loader.dataset), device=self.device)
+        lamb = torch.zeros(len(train_loader.dataset), device=self.device)
         lamb.fill_(0.001)
         mu = torch.zeros(1, device=self.device)
         mu.fill_(0.001)
-        gamma = torch.zeros(1, device=self.device)
+        gamma = torch.zeros(len(train_loader.dataset), device=self.device)
         gamma.fill_(0.001)
-
-        # Temporary variables for dual updates
-        tau_1 = 0.0
-        tau_eps = 0.0
-        tau_w_y = torch.zeros(len(self.train_loader.dataset)).to(self.device)
 
         # Primal Optimization
         var_list = [{
@@ -66,15 +57,29 @@ class COCOStuffF1Trainer(Agent):
 
         # Model and optimizer
         model = get_model(n_classes=trainset.N_CLASSES).to(self.device)
-        optimizer = torch.optim.Adam(
-            var_list, lr=self.config["learning rate"])
+        optimizer = torch.optim.Adam(var_list, lr=self.config["learning rate"])
+
+        # Load checkpoint if exists
+        start_epochs = self._load_checkpoint(model)
 
         # Dataset iterator
         train_iter = iter(train_loader)
-        for epoch in tqdm(range(self.start_epochs, self.config["epochs"])):
-            total_loss = 0
+
+        # Count epochs and steps
+        epochs = 0
+        step = 0
+
+        # Cache losses
+        total_loss = 0
+        total_t1_loss = 0
+        total_t2_loss = 0
+
+        for outer in tqdm(range(start_epochs, self.config["n_outer"])):
             model.train()
-            for _ in tqdm(range(self.config["n_inner"])):
+
+            for inner in tqdm(range(self.config["n_inner"])):
+                step += 1
+
                 # Sample
                 try:
                     X, Y = next(train_iter)
@@ -84,16 +89,21 @@ class COCOStuffF1Trainer(Agent):
 
                 # Forward computation
                 X, Y = X.to(self.device), Y.to(self.device)
-                Y_, y_ = self.model(X)
-                y = Y[:, 1]
+                y0_, y1_ = model(X)
+                y0 = Y[:, 0]
+                y1 = Y[:, 1]
                 i = Y[:, 2]
 
-                # Loss business
-                lagrangian = lagrange(num_positives, y_, y, w, eps, tau[i],
-                                      lamb[i], mu, gamma, self.device)
-                loss = cross_entropy2d(Y_,
-                                       Y) + (self.config["beta"] * lagrangian)
+                # Compute loss
+                t1_loss = cross_entropy2d(y0_, y0)
+                t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
+                                   lamb[i], mu, gamma[i])
+                loss = t1_loss + (self.config["beta"] * t2_loss)
+
+                # Store losses for logging
                 total_loss += loss.item()
+                total_t1_loss += t1_loss.item()
+                total_t2_loss += t2_loss.item()
 
                 # Backpropagate
                 loss.backward()
@@ -105,44 +115,69 @@ class COCOStuffF1Trainer(Agent):
                     torch.zeros(1, dtype=torch.float, device=self.device),
                     eps.data)
 
-                # Cache for Dual updates
-                y = y.float()
-                y_ = y_.view(-1)
-                tau_1 += ((y * tau[i]).sum() - 1)
-                tau_eps += ((y * tau[i]).sum() - eps)
-                tau_w_y[i] += (y * (tau[i] - (w * y_))).sum()
+                # Log and validate per epoch
+                if (step + 1) % len(train_loader) == 0:
+                    epochs += 1
 
-            # Dual updates
-            lamb.data = lamb.data + (self.config["eta_lamb"] * tau_w_y)
-            mu.data = mu.data + (self.config["eta_mu"] * tau_1)
-            gamma.data = gamma.data + (self.config["eta_gamma"] * tau_eps)
+                    # Log loss
+                    avg_loss = total_loss / len(train_loader)
+                    avg_t1_loss = total_t1_loss / len(train_loader)
+                    avg_t2_loss = total_t2_loss / len(train_loader)
+                    total_loss = 0
+                    total_t1_loss = 0
+                    total_t2_loss = 0
+                    self.logger.log("epochs", epochs, "loss", avg_loss)
+                    self.logger.log("epochs", epochs, "t1loss", avg_t1_loss)
+                    self.logger.log("epochs", epochs, "t2loss", avg_t2_loss)
 
-            # Log loss
-            avg_loss = total_loss / len(self.train_loader)
-            self.logger.log("epoch", epoch, "avg_loss", avg_loss)
+                    # Validate
+                    model.eval()
+                    ious = []
+                    with torch.no_grad():
+                        for images, labels in val_loader:
+                            images = images.to(self.device)
+                            labels = labels[0].long()
+                            labels = labels.to(self.device)
+                            outputs = model(images)
+                            _, predicted = torch.max(outputs.data, 1)
+                            iou = get_iou(predicted, labels)
+                            ious.append(iou.item())
 
-            # Validate
-            model.eval()
-            ious = []
+                    # Log mean IOU
+                    mean_iou = mean(ious)
+                    self.logger.log("epochs", epochs, "mean_iou", mean_iou)
+
+                    # Graph
+                    self.logger.graph()
+
+                    # Checkpoint
+                    self._save_checkpoint(epochs, model)
+
+            # Dual Updates
             with torch.no_grad():
-                for images, labels in val_loader:
-                    images = images.to(self.device)
-                    labels = labels[0].long()
-                    labels = labels.to(self.device)
-                    outputs = model(images)
-                    _, predicted = torch.max(outputs.data, 1)
-                    iou = get_iou(predicted, labels)
-                    ious.append(iou.item())
+                mu_cache = 0
+                lamb_cache = torch.zeros_like(lamb)
+                gamma_cache = torch.zeros_like(gamma)
+                for X, Y in tqdm(train_loader):
+                    # Forward computation
+                    X, Y = X.to(self.device), Y.to(self.device)
+                    _, y1_ = model(X)
+                    y1 = Y[:, 1]
+                    i = Y[:, 2]
 
-            # Log mean IOU
-            mean_iou = mean(ious)
-            self.logger.log("epoch", epoch, "mean_iou", mean_iou)
+                    # Cache for mu update
+                    mu_cache += tau[i].sum()
 
-            # Graph
-            self.logger.graph()
+                    # Lambda and gamma updates
+                    y1 = y1.float()
+                    y1_ = y1_.view(-1)
 
-            # Checkpoint
-            torch.save(
-                model.state_dict(),
-                Path(self.checkpoints_folder,
-                     str(epoch + 1) + ".ckpt"))
+                    lamb_cache[i] += (
+                        self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
+                    gamma_cache[i] += (
+                        self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
+
+                # Update data
+                mu.data += self.config["eta_mu"] * (mu_cache - 1)
+                lamb.data += lamb_cache
+                gamma.data += gamma_cache
