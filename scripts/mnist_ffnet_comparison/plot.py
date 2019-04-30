@@ -20,6 +20,6 @@ if __name__ == "__main__":
     ax.plot(baseline_ys, label="baseline")
     ax.plot(f1_ys, label="f1 normalized")
     ax.set_xlabel("Epochs")
-    ax.set_ylabel("Acuracy")
+    ax.set_ylabel("Accuracy")
     ax.legend()
     plt.savefig("epochs_accuracy_comparison.png")
