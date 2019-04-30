@@ -2,6 +2,16 @@ import csv
 import matplotlib.pyplot as plt
 from pathlib import Path
 
+import matplotlib.pylab as pylab
+params = {
+    'legend.fontsize': 'x-large',
+    'axes.labelsize': 'x-large',
+    'axes.titlesize': 'x-large',
+    'xtick.labelsize': 'x-large',
+    'ytick.labelsize': 'x-large'
+}
+pylab.rcParams.update(params)
+
 if __name__ == "__main__":
     baseline_ys = []
     with open(Path("./baseline")) as csv_file:
@@ -19,7 +29,7 @@ if __name__ == "__main__":
     fig, ax = plt.subplots()
     ax.plot(baseline_ys, label="baseline")
     ax.plot(f1_ys, label="f1 normalized")
-    ax.set_xlabel("Epochs")
-    ax.set_ylabel("Mean IoU")
+    ax.set_xlabel("Epochs", fontsize=14)
+    ax.set_ylabel("Mean IoU", fontsize=14)
     ax.legend()
-    plt.savefig("epochs_accuracy_comparison.png")
+    plt.savefig("coco_stuff_sky.png")
