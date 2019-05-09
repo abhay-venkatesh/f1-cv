@@ -26,10 +26,17 @@ if __name__ == "__main__":
         for row in csv_reader:
             f1_ys.append(float(row[1]))
 
+    f1_fp_ys = []
+    with open(Path("./epochs_accuracy_f1_fp")) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            f1_fp_ys.append(float(row[1]))
+
     plt.style.use('ggplot')
     fig, ax = plt.subplots()
     ax.plot(baseline_ys, label="baseline")
     ax.plot(f1_ys, label="f1 normalized")
+    ax.plot(f1_fp_ys, label="f1 normalized with full projections")
     ax.set_xlabel("Epochs", fontsize=14)
     ax.set_ylabel("Accuracy", fontsize=14)
     ax.legend()
