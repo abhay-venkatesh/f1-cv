@@ -71,7 +71,6 @@ def partial_lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
     # Positive example terms
     pos = mu * ((y1 * tau).sum() - 1)
     pos += (y1 * lamb * (tau - (w * y1_))).sum()
-    pos += (y1 * gamma * (tau - eps)).sum()
 
     return neutral + neg + pos
 
