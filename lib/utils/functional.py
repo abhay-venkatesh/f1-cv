@@ -54,3 +54,46 @@ def lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
     pos += (y1 * gamma * (tau - eps)).sum()
 
     return neutral + neg + pos
+
+
+def partial_lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
+    # Reshape
+    y1 = y1.float()
+    y1_ = y1_.squeeze()
+
+    # Term that is not associated with either positive or negative examples
+    neutral = (num_pos * eps)
+
+    # Negative example terms
+    neg = torch.max(torch.zeros_like(y1_), eps + (w * y1_))
+    neg = (abs(1 - y1) * neg).sum()
+
+    # Positive example terms
+    pos = mu * ((y1 * tau).sum() - 1)
+    pos += (y1 * lamb * (tau - (w * y1_))).sum()
+    pos += (y1 * gamma * (tau - eps)).sum()
+
+    return neutral + neg + pos
+
+
+def sorted_project(eps, tau):
+    tau_sorted, indices = tau.clone().detach().cuda().sort(descending=True)
+    new_eps = eps.clone().detach().cuda()
+    dataset_size = len(tau)
+    k = dataset_size + 1
+    for i in range(dataset_size):
+        if tau_sorted[i] <= max(new_eps, 0):
+            k = i
+            break
+        else:
+            new_eps.data = ((
+                (i * new_eps.data) + tau_sorted[i].data) / (i + 1))
+    new_eps = torch.max(eps, torch.zeros_like(eps))
+    new_tau = torch.full_like(tau_sorted, 0)
+    new_tau[:k - 1] = new_eps
+    new_tau[k:] = tau_sorted[k:]
+    new_tau[indices] = new_tau
+
+    # Return
+    eps.data = new_eps
+    tau.data = new_tau
