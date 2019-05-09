@@ -1,6 +1,6 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuff
-from lib.models.seg_net import SegNet
+from lib.models.deep_lab import DeepLab
 from lib.utils.functional import cross_entropy2d, get_iou
 from pathlib import Path
 from statistics import mean
@@ -23,7 +23,7 @@ class COCOStuffBaselineTrainer(Agent):
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
-        model = SegNet(n_classes=self.N_CLASSES).to(self.device)
+        model = DeepLab(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
         optimizer = torch.optim.Adam(
             model.parameters(), lr=self.config["learning rate"])

@@ -1,8 +1,7 @@
-import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from modeling.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
+from lib.models.deeplab.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
 
 
 class _ASPPModule(nn.Module):

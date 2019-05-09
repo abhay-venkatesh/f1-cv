@@ -7,10 +7,12 @@ import torch.nn.functional as F
 
 
 class DeepLab(nn.Module):
+    """ GitHub Reference: jfzhang95/pytorch-deeplab-xception """
+
     def __init__(self,
                  backbone='resnet',
                  output_stride=16,
-                 num_classes=21,
+                 n_classes=21,
                  sync_bn=True,
                  freeze_bn=False):
         super(DeepLab, self).__init__()
@@ -24,7 +26,7 @@ class DeepLab(nn.Module):
 
         self.backbone = build_backbone(backbone, output_stride, BatchNorm)
         self.aspp = build_aspp(backbone, output_stride, BatchNorm)
-        self.decoder = build_decoder(num_classes, backbone,BatchNorm)
+        self.decoder = build_decoder(n_classes, backbone, BatchNorm)
 
         if freeze_bn:
             self.freeze_bn()

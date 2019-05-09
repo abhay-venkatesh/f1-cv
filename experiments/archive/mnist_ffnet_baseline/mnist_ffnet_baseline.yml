@@ -1,7 +1,0 @@
-agent: MNISTBSTrainer
-dataset path: D:\code\data\filtered_datasets\mnistf1
-learning rate: 0.001
-batch size: 100
-epochs: 100
-model: FFNet
-checkpoint path: D:\code\src\f1-cv\experiments\mnist_ffnet_baseline\checkpoints\50.ckpt

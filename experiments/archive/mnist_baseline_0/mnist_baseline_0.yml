@@ -1,5 +1,0 @@
-agent: MNISTBSTrainer
-dataset path: /mnt/hdd-4tb/testuser2/datasets
-learning rate: 0.01
-batch size: 100
-epochs: 40
