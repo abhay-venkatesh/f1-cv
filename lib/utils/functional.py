@@ -85,8 +85,7 @@ def sorted_project(eps, tau):
             k = i
             break
         else:
-            new_eps.data = ((
-                (i * new_eps.data) + tau_sorted[i].data) / (i + 1))
+            new_eps = (((i * new_eps) + tau_sorted[i]) / (i + 1))
     new_eps = torch.max(eps, torch.zeros_like(eps))
     new_tau = torch.full_like(tau_sorted, 0)
     new_tau[:k - 1] = new_eps
