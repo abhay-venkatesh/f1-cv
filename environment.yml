@@ -7,7 +7,6 @@ dependencies:
 - inflection
 - tqdm
 - matplotlib
-- pytorch
+- pytorch=1.0.0
 - torchvision
 - scikit-image
-- cudnn
