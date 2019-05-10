@@ -104,7 +104,6 @@ def naive_project(eps, tau, I):
         dummy = tau.clone().detach().cuda()
         for i in I:
             if tau[i] > eps:
-                dummy = torch.full_like(tau, 0)
-                dummy[i] = tau[i]
-                eps.data = tau[i]
-        tau.data = (dummy + eps) / 2
+                dummy[i] = (tau[i] + eps) / 2
+                eps.data = dummy[i]
+        tau.data = dummy
