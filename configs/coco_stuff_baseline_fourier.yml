@@ -1,5 +1,5 @@
 agent: COCOStuffBaselineTrainer
 epochs: 100
-dataset path: /mnt/hdd-4tb/testuser2/datasets/coco_sky_tesla
+dataset path: /home/abhay/data/filtered_datasets/stuff_ubuntu
 learning rate: 0.01
 batch size: 7
