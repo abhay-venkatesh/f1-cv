@@ -10,7 +10,7 @@ import torch
 
 
 class COCOStuffBaselineTrainer(Agent):
-    N_CLASSES = 2
+    N_CLASSES = 92
 
     def run(self):
         trainset = COCOStuff(Path(self.config["dataset path"], "train"))
