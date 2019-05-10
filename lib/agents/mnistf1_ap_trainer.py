@@ -114,9 +114,7 @@ class MNISTF1APTrainer(Agent):
                 optimizer.zero_grad()
 
                 # Project
-                print(eps)
                 naive_project(eps, tau, i)
-                print(tau)
 
                 # Log and validate per epoch
                 if (step + 1) % len(train_loader) == 0:
