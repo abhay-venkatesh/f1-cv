@@ -1,6 +1,7 @@
 name: f1-cv
 channels:
 - pytorch
+- menpo
 dependencies:
 - python=3.7
 - pyyaml
@@ -10,3 +11,4 @@ dependencies:
 - pytorch=1.0.0
 - torchvision
 - scikit-image
+- opencv

@@ -95,3 +95,14 @@ def sorted_project(eps, tau):
     # Return
     eps.data = new_eps
     tau.data = new_tau
+
+
+def naive_project(eps, tau, i):
+    if eps < 0:
+        eps.data = torch.full_like(eps, 0)
+    else:
+        if tau[i] > eps:
+            dummy = torch.full_like(tau, 0)
+            dummy[i] = tau[i]
+            tau.data = (dummy + eps) / 2
+            eps.data = tau[i]
