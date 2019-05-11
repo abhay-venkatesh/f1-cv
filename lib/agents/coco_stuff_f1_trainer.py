@@ -1,6 +1,6 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff_f1 import COCOStuffF1
-from lib.models.seg_net import SegNetF1
+from lib.models.seg_net import DeepLabF1
 from lib.utils.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
 from statistics import mean
@@ -27,7 +27,7 @@ class COCOStuffF1Trainer(Agent):
             dataset=valset, batch_size=self.config["batch size"])
 
         # Model
-        model = SegNetF1(n_classes=self.N_CLASSES).to(self.device)
+        model = DeepLabF1(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants

@@ -68,3 +68,39 @@ class DeepLab(nn.Module):
                     for p in m[1].parameters():
                         if p.requires_grad:
                             yield p
+
+
+class DeepLabF1(DeepLab):
+    def __init__(self,
+                 backbone='resnet',
+                 output_stride=16,
+                 n_classes=21,
+                 sync_bn=True,
+                 freeze_bn=False):
+        super(DeepLabF1, self).__init__()
+        if backbone == 'drn':
+            output_stride = 8
+
+        if sync_bn is True:
+            BatchNorm = SynchronizedBatchNorm2d
+        else:
+            BatchNorm = nn.BatchNorm2d
+
+        self.backbone = build_backbone(backbone, output_stride, BatchNorm)
+        self.aspp = build_aspp(backbone, output_stride, BatchNorm)
+        self.decoder = build_decoder(n_classes, backbone, BatchNorm)
+
+        if freeze_bn:
+            self.freeze_bn()
+
+        self.fc = nn.Linear(1575040, 1)
+
+    def forward(self, input):
+        x, low_level_feat = self.backbone(input)
+        x = self.aspp(x)
+        x = self.decoder(x, low_level_feat)
+        f1 = self.fc(x)
+        x = F.interpolate(
+            x, size=input.size()[2:], mode='bilinear', align_corners=True)
+
+        return x, f1
