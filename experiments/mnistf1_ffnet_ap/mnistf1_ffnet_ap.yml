@@ -1,5 +1,5 @@
 agent: MNISTF1APTrainer
-dataset path: /mnt/hdd-4tb/testuser2/datasets/mnistf1
+dataset path: /home/abhay/data/mnistf1
 learning rate: 0.01
 batch size: 100
 n_outer: 20
