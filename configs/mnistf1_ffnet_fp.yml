@@ -2,7 +2,7 @@ agent: MNISTF1FPTrainer
 dataset path: /home/abhay/data/mnistf1
 learning rate: 0.01
 batch size: 100
-n_outer: 20
+n_outer: 40
 n_inner: 2400
 model: FFNetF1
 
