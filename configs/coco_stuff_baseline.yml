@@ -2,4 +2,4 @@ agent: COCOStuffBaselineTrainer
 epochs: 100
 dataset path: D:\code\data\filtered_datasets\stuff
 learning rate: 0.01
-batch size: 4
+batch size: 3
