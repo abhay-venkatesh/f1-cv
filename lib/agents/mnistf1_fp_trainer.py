@@ -16,6 +16,7 @@ class MNISTF1FPTrainer(Agent):
             self.config["dataset path"], train=True, download=True)
         train_loader = DataLoader(
             trainset, shuffle=True, batch_size=self.config["batch size"])
+        print(len(train_loader))
 
         # Validation set
         valset = MNISTF1(
