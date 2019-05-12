@@ -13,7 +13,7 @@ class DeepLab(nn.Module):
     """ Reference: jfzhang95/pytorch-deeplab-xception """
 
     def __init__(self,
-                 backbone='xception',
+                 backbone='resnet',
                  output_stride=16,
                  n_classes=21,
                  sync_bn=True,
