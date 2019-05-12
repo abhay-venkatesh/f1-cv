@@ -1,6 +1,6 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff_f1 import COCOStuffF1
-from lib.models.deep_lab import DeepLabF1
+from lib.models.deep_lab import build_deep_lab_f1
 from lib.utils.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
 from statistics import mean
@@ -16,8 +16,6 @@ class COCOStuffF1Trainer(Agent):
     def run(self):
         # Training dataset
         trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
-        print(len(trainset))
-        raise RuntimeError
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
@@ -29,7 +27,7 @@ class COCOStuffF1Trainer(Agent):
             dataset=valset, batch_size=self.config["batch size"])
 
         # Model
-        model = DeepLabF1(n_classes=self.N_CLASSES).to(self.device)
+        model = build_deep_lab_f1(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants
