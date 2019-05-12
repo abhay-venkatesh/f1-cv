@@ -5,7 +5,7 @@ import torch.nn.functional as F
 def cross_entropy2d(output, target, weight=None):
     # Parallel loss computation
     if torch.cuda.device_count() > 1:
-        loss = CriterionParallel(cross_entropy2d)
+        return CriterionParallel(cross_entropy2d)
 
     n, c, h, w = output.size()
     nt, ht, wt = target.size()
