@@ -1,5 +1,0 @@
-agent: COCOStuffBaselineTrainer
-epochs: 100
-dataset path: /home/abhay/data/filtered_datasets/stuff_ubuntu
-learning rate: 0.01
-batch size: 9
