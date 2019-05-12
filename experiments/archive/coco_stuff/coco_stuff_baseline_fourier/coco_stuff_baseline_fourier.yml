@@ -2,4 +2,5 @@ agent: COCOStuffBaselineTrainer
 epochs: 100
 dataset path: /home/abhay/data/filtered_datasets/stuff_ubuntu
 learning rate: 0.01
-batch size: 7
+batch size: 12
+checkpoint path: experiments/coco_stuff_baseline_fourier/checkpoints/1.ckpt
