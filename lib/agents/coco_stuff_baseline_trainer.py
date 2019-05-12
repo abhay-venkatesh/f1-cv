@@ -1,7 +1,8 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuff
 from lib.models.deep_lab import build_deep_lab
-from lib.utils.functional import cross_entropy2d, get_iou
+from lib.utils.functional import get_iou
+from lib.utils.modular import CrossEntropy2D, CriterionParallel
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
@@ -28,6 +29,11 @@ class COCOStuffBaselineTrainer(Agent):
         optimizer = torch.optim.Adam(
             model.parameters(), lr=self.config["learning rate"])
 
+        # Parallelize computation
+        loss_fn = CrossEntropy2D()
+        if torch.cuda.device_count() > 1:
+            loss_fn = CriterionParallel(loss_fn)
+
         for epoch in tqdm(range(start_epochs, self.config["epochs"])):
 
             model.train()
@@ -35,7 +41,7 @@ class COCOStuffBaselineTrainer(Agent):
             for X, Y in tqdm(train_loader):
                 X, Y = X.to(self.device), Y.long().to(self.device)
                 Y_ = model(X)
-                loss = cross_entropy2d(Y_, Y)
+                loss = loss_fn(Y_, Y)
                 total_loss += loss.item()
                 loss.backward()
                 optimizer.step()
