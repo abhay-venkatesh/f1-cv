@@ -133,6 +133,8 @@ class COCOStuffF1(data.Dataset):
                 if fraction > self.THRESHOLDS[i]:
                     positives += 1
 
+            # If the simple majority of the classes in the image are large,
+            #  the image is treated as a "large" image.
             if positives < (len(np.unique(seg_array)) / 2):
                 self.f1_classes.append(0)
             else:
