@@ -2,7 +2,8 @@ from lib.models.deeplab.aspp import build_aspp
 from lib.models.deeplab.backbone import build_backbone
 from lib.models.deeplab.decoder import build_decoder
 from lib.models.deeplab.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
-from net.sync_batchnorm.replicate import patch_replication_callback
+from lib.models.deeplab.sync_batchnorm.replicate import \
+    patch_replication_callback
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
