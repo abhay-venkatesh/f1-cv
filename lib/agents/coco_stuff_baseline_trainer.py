@@ -30,9 +30,11 @@ class COCOStuffBaselineTrainer(Agent):
             model.parameters(), lr=self.config["learning rate"])
 
         # Parallelize loss computation
+        """
         loss_fn = ModularizedFunction(cross_entropy2d)
         if torch.cuda.device_count() > 1:
             loss_fn = CriterionParallel(loss_fn)
+        """
 
         for epoch in tqdm(range(start_epochs, self.config["epochs"])):
 
@@ -41,7 +43,7 @@ class COCOStuffBaselineTrainer(Agent):
             for X, Y in tqdm(train_loader):
                 X, Y = X.to(self.device), Y.long().to(self.device)
                 Y_ = model(X)
-                loss = loss_fn(Y_, Y)
+                loss = cross_entropy2d(Y_, Y)
                 total_loss += loss.item()
                 loss.backward()
                 optimizer.step()
