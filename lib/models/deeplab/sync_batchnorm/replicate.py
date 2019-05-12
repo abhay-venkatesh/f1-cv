@@ -13,10 +13,8 @@ import functools
 from torch.nn.parallel.data_parallel import DataParallel
 
 __all__ = [
-    'CallbackContext',
-    'execute_replication_callbacks',
-    'DataParallelWithCallback',
-    'patch_replication_callback'
+    'CallbackContext', 'execute_replication_callbacks',
+    'DataParallelWithCallback', 'patch_replication_callback'
 ]
 
 
@@ -26,12 +24,16 @@ class CallbackContext(object):
 
 def execute_replication_callbacks(modules):
     """
-    Execute an replication callback `__data_parallel_replicate__` on each module created by original replication.
-    The callback will be invoked with arguments `__data_parallel_replicate__(ctx, copy_id)`
-    Note that, as all modules are isomorphism, we assign each sub-module with a context
+    Execute an replication callback `__data_parallel_replicate__` on each
+     module created by original replication.
+    The callback will be invoked with arguments
+     `__data_parallel_replicate__(ctx, copy_id)`
+    Note that, as all modules are isomorphism, we assign each sub-module with
+     a context
     (shared among multiple copies of this module on different devices).
     Through this context, different copies can share some information.
-    We guarantee that the callback on the master copy (the first copy) will be called ahead of calling the callback
+    We guarantee that the callback on the master copy (the first copy) will be
+     called ahead of calling the callback
     of any slave copies.
     """
     master_copy = modules[0]
@@ -47,9 +49,11 @@ def execute_replication_callbacks(modules):
 class DataParallelWithCallback(DataParallel):
     """
     Data Parallel with a replication callback.
-    An replication callback `__data_parallel_replicate__` of each module will be invoked after being created by
+    An replication callback `__data_parallel_replicate__` of each module will
+     be invoked after being created by
     original `replicate` function.
-    The callback will be invoked with arguments `__data_parallel_replicate__(ctx, copy_id)`
+    The callback will be invoked with arguments
+     `__data_parallel_replicate__(ctx, copy_id)`
     Examples:
         > sync_bn = SynchronizedBatchNorm1d(10, eps=1e-5, affine=False)
         > sync_bn = DataParallelWithCallback(sync_bn, device_ids=[0, 1])
@@ -57,14 +61,16 @@ class DataParallelWithCallback(DataParallel):
     """
 
     def replicate(self, module, device_ids):
-        modules = super(DataParallelWithCallback, self).replicate(module, device_ids)
+        modules = super(DataParallelWithCallback, self).replicate(
+            module, device_ids)
         execute_replication_callbacks(modules)
         return modules
 
 
 def patch_replication_callback(data_parallel):
     """
-    Monkey-patch an existing `DataParallel` object. Add the replication callback.
+    Monkey-patch an existing `DataParallel` object. Add the replication
+     callback.
     Useful when you have customized `DataParallel` implementation.
     Examples:
         > sync_bn = SynchronizedBatchNorm1d(10, eps=1e-5, affine=False)

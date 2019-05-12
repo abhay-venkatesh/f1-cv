@@ -2,15 +2,17 @@ from lib.models.deeplab.aspp import build_aspp
 from lib.models.deeplab.backbone import build_backbone
 from lib.models.deeplab.decoder import build_decoder
 from lib.models.deeplab.sync_batchnorm.batchnorm import SynchronizedBatchNorm2d
+from net.sync_batchnorm.replicate import patch_replication_callback
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
 class DeepLab(nn.Module):
-    """ GitHub Reference: jfzhang95/pytorch-deeplab-xception """
+    """ Reference: jfzhang95/pytorch-deeplab-xception """
 
     def __init__(self,
-                 backbone='resnet',
+                 backbone='xception',
                  output_stride=16,
                  n_classes=21,
                  sync_bn=True,
@@ -104,3 +106,11 @@ class DeepLabF1(DeepLab):
             x, size=input.size()[2:], mode='bilinear', align_corners=True)
 
         return x, f1
+
+
+def build_deep_lab(n_classes=21):
+    net = DeepLab(n_classes=n_classes)
+    if torch.cuda.device_count() > 1:
+        net = nn.DataParallel(net)
+        patch_replication_callback(net)
+    return net
