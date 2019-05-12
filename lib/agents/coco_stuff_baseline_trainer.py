@@ -7,7 +7,6 @@ from statistics import mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 import torch
-from lib.utils.modular import ModularizedFunction, CriterionParallel
 
 
 class COCOStuffBaselineTrainer(Agent):
@@ -28,13 +27,6 @@ class COCOStuffBaselineTrainer(Agent):
         start_epochs = self._load_checkpoint(model)
         optimizer = torch.optim.Adam(
             model.parameters(), lr=self.config["learning rate"])
-
-        # Parallelize loss computation
-        """
-        loss_fn = ModularizedFunction(cross_entropy2d)
-        if torch.cuda.device_count() > 1:
-            loss_fn = CriterionParallel(loss_fn)
-        """
 
         for epoch in tqdm(range(start_epochs, self.config["epochs"])):
 
