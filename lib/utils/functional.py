@@ -66,6 +66,8 @@ def partial_lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
 
     # Negative example terms
     neg = torch.max(torch.zeros_like(y1_), eps + (w * y1_))
+    print(neg)
+    print(y1)
     neg = (abs(1 - y1) * neg).sum()
 
     # Positive example terms

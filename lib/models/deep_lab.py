@@ -96,13 +96,13 @@ class DeepLabF1(DeepLab):
         if freeze_bn:
             self.freeze_bn()
 
-        self.fc = nn.Linear(1575040, 1)
+        self.fc = nn.Linear(99360, 1)
 
     def forward(self, input):
         x, low_level_feat = self.backbone(input)
         x = self.aspp(x)
         x = self.decoder(x, low_level_feat)
-        f1 = self.fc(x)
+        f1 = self.fc(x.view(x.size(0), -1))
         x = F.interpolate(
             x, size=input.size()[2:], mode='bilinear', align_corners=True)
 
