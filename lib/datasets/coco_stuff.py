@@ -8,9 +8,6 @@ import torchvision.transforms as transforms
 
 
 class COCOStuff(data.Dataset):
-    IMG_HEIGHT = 426
-    IMG_WIDTH = 640
-
     def __init__(self, root):
         self.root = root
         image_folder = Path(self.root, "images")
