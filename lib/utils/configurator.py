@@ -30,6 +30,7 @@ class Configurator:
             try:
                 config = yaml.load(stream, Loader=yaml.SafeLoader)
                 config["name"] = Path(config_file).stem
+                config["path"] = Path(config_file)
                 return config
             except yaml.YAMLError as exc:
                 print(exc)
@@ -46,6 +47,5 @@ class Configurator:
         ]:
             if not os.path.exists(path):
                 os.makedirs(path)
-        shutil.copy2(
-            Path("configs", config["name"] + ".yml"), config["folder"])
+        shutil.copy2(config["path"], config["folder"])
         return config
