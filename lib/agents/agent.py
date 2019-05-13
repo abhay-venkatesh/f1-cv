@@ -27,6 +27,8 @@ class Agent:
         checkpoint_path = Path(self.config["checkpoints folder"],
                                checkpoint_filename)
 
+        torch.save(model.state_dict(), checkpoint_path)
+
         if not retain:
             prev_checkpoint_filename = str(epoch) + ".ckpt"
             prev_checkpoint_path = Path(self.config["checkpoints folder"],
@@ -34,4 +36,3 @@ class Agent:
             if os.path.exists(prev_checkpoint_path):
                 os.remove(prev_checkpoint_path)
 
-        torch.save(model.state_dict(), checkpoint_path)
