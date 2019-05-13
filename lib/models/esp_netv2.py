@@ -299,3 +299,8 @@ class CDilatedB(nn.Module):
         :return: transformed feature map
         '''
         return self.bn(self.conv(input))
+
+
+def build_esp_netv2(n_classes=21):
+    net = EESPNet_Seg(n_classes=n_classes)
+    return net

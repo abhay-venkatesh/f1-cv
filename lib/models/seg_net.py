@@ -193,3 +193,13 @@ class SegNetF1(SegNet):
         f1 = self.fc(up2)
 
         return up1, f1
+
+
+def build_seg_net(n_classes=21):
+    net = SegNet(n_classes=n_classes)
+    return net
+
+
+def build_seg_net_f1(n_classes=21):
+    net = SegNetF1(n_classes=n_classes)
+    return net

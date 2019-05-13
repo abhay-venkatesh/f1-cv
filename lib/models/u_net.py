@@ -109,3 +109,8 @@ class outconv(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         return x
+
+
+def build_u_net(n_classes=21):
+    net = UNet(n_channels=3, n_classes=n_classes)
+    return net

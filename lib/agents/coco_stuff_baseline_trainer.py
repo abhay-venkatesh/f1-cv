@@ -1,11 +1,11 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuff
-from lib.models.deep_lab import build_deep_lab
 from lib.utils.functional import get_iou, cross_entropy2d
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import importlib
 import torch
 
 
@@ -23,7 +23,11 @@ class COCOStuffBaselineTrainer(Agent):
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
-        model = build_deep_lab(n_classes=self.N_CLASSES).to(self.device)
+        net_module = importlib.import_module(
+            ("lib.models.{}".format(self.config["model"])))
+        net = getattr(net_module, "build_" + self.config["model"])
+
+        model = net(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
         optimizer = torch.optim.Adam(
             model.parameters(), lr=self.config["learning rate"])
