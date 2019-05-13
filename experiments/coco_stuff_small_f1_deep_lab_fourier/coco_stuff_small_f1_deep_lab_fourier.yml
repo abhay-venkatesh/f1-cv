@@ -2,7 +2,7 @@ agent: COCOStuffF1Trainer
 dataset path: /home/abhay/data/filtered_datasets/stuff_small_fourier
 model: deep_lab
 learning rate: 0.01
-batch size: 144
+batch size: 128
 n_outer: 80
 n_inner: 800
 
