@@ -9,8 +9,6 @@ import torchvision.transforms as transforms
 
 
 class COCOStuffF1(data.Dataset):
-    IMG_HEIGHT = 426
-    IMG_WIDTH = 640
     THRESHOLDS = {
         0: 0.95,
         1: 0.05,
