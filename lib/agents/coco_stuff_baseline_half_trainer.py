@@ -33,7 +33,7 @@ class COCOStuffBaselineHalfTrainer(Agent):
             model.train()
             total_loss = 0
             for X, Y in tqdm(train_loader):
-                X, Y = X.to(self.device), Y.long().to(self.device)
+                X, Y = X.to(self.device).half(), Y.long().to(self.device)
                 Y_ = model(X)
                 loss = cross_entropy2d(Y_, Y).half()
                 total_loss += loss.item()
