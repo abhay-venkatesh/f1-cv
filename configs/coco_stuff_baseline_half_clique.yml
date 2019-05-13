@@ -1,0 +1,5 @@
+agent: COCOStuffBaselineHalfTrainer
+epochs: 100
+dataset path: /home/abhay/data/filtered_datasets/stuff_clique
+learning rate: 0.01
+batch size: 8
