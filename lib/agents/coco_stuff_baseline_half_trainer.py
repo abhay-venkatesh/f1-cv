@@ -9,7 +9,7 @@ from tqdm import tqdm
 import torch
 
 
-class COCOStuffBaselineTrainer(Agent):
+class COCOStuffBaselineHalfTrainer(Agent):
     N_CLASSES = 92
 
     def run(self):
