@@ -1,6 +1,5 @@
 agent: COCOSingleStuffF1APTrainer 
 dataset path: D:\code\data\filtered_datasets\sky
-model: seg_net
 learning rate: 0.01
 batch size: 7
 n_outer: 40

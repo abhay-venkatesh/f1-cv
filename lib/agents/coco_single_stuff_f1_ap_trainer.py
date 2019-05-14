@@ -10,7 +10,7 @@ from tqdm import tqdm
 import torch
 
 
-class COCOStuffF1Trainer(Agent):
+class COCOSingleStuffF1APTrainer(Agent):
     N_CLASSES = 2
 
     def run(self):
