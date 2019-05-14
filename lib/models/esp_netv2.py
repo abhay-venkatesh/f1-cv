@@ -304,3 +304,6 @@ class CDilatedB(nn.Module):
 def build_esp_netv2(n_classes=21):
     net = EESPNet_Seg(n_classes=n_classes)
     return net
+
+def build_esp_netv2_f1(n_classes=21):
+    raise NotImplementedError
