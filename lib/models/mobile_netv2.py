@@ -11,8 +11,6 @@ import torch.nn.functional as F
 
 
 class MobileNetV2Plus(nn.Module):
-    """ GitHub Reference: ansleliu/LightNetPlusPlus """
-
     def __init__(self,
                  num_classes=19,
                  width_multi=1.0,
@@ -138,7 +136,7 @@ class MobileNetV2Plus(nn.Module):
         self._initialize_weights()
 
     def _initialize_weights(self):
-        for m in self.lib.models.lightnet():
+        for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 init.kaiming_normal_(
                     m.weight, a=0.10, mode='fan_in', nonlinearity='leaky_relu')
@@ -160,7 +158,7 @@ class MobileNetV2Plus(nn.Module):
         #     if freeze_bn_affine:
         #         print("> Freezing Weight/Bias of BatchNorm2D.")
         if freeze_bn:
-            for m in self.lib.models.lightnet():
+            for m in self.modules():
                 if isinstance(m, nn.BatchNorm2d):
                     m.eval()
                     if freeze_bn_affine:
