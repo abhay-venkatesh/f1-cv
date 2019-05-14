@@ -759,9 +759,9 @@ class UPerNet(nn.Module):
         return x
 
 
-def build_mobile_netv2(n_classes=2):
+def build_mobile_netv2_old(n_classes=2):
     ARCH_ENCODER = "mobilenetv2dilated"
-    ARCH_DECODER = "c1_deepsup"
+    ARCH_DECODER = "c1"
     FC_DIM = 320
     WEIGHTS_ENCODER = ""
     WEIGHTS_DECODER = ""
@@ -784,5 +784,28 @@ def build_mobile_netv2(n_classes=2):
     else:
         segmentation_module = SegmentationModule(net_encoder, net_decoder,
                                                  crit)
+
+    return segmentation_module
+
+
+def build_mobile_netv2(n_classes=2):
+    ARCH_ENCODER = "mobilenetv2dilated"
+    ARCH_DECODER = "c1"
+    FC_DIM = 320
+    WEIGHTS_ENCODER = ""
+    WEIGHTS_DECODER = ""
+
+    builder = ModelBuilder()
+    net_encoder = builder.build_encoder(
+        arch=ARCH_ENCODER, fc_dim=FC_DIM, weights=WEIGHTS_ENCODER)
+    net_decoder = builder.build_decoder(
+        arch=ARCH_DECODER,
+        fc_dim=FC_DIM,
+        num_class=n_classes,
+        weights=WEIGHTS_DECODER)
+
+    crit = nn.NLLLoss(ignore_index=-1)
+
+    segmentation_module = SegmentationModule(net_encoder, net_decoder, crit)
 
     return segmentation_module
