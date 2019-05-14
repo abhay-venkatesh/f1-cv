@@ -1,11 +1,11 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff_f1 import COCOStuffF1
-from lib.models.deep_lab import build_deep_lab_f1
 from lib.utils.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import importlib
 import torch
 
 
@@ -25,8 +25,12 @@ class COCOStuffF1Trainer(Agent):
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
+        net_module = importlib.import_module(
+            ("lib.models.{}".format(self.config["model"])))
+        net = getattr(net_module, "build_" + self.config["model"])
+
         # Model
-        model = build_deep_lab_f1(n_classes=self.N_CLASSES).to(self.device)
+        model = net(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants

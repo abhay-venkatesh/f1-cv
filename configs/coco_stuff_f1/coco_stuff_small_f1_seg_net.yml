@@ -1,10 +1,10 @@
 agent: COCOStuffF1Trainer 
-dataset path: /home/abhay/data/filtered_datasets/stuff_small_fourier
-model: deep_lab_f1
+dataset path: D:\code\data\filtered_datasets\stuff_small
+model: seg_net_f1
 learning rate: 0.01
-batch size: 128
+batch size: 3
 n_outer: 80
-n_inner: 800
+n_inner: 36000
 
 # Normalization coefficient
 beta: 0.001
