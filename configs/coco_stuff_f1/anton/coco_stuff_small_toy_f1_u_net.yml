@@ -1,10 +1,10 @@
 agent: COCOStuffF1Trainer 
-dataset path: /home/abhay/data/filtered_datasets/stuff_small_chern
+dataset path: D:\code\data\filtered_datasets\stuff_small_toy
 model: u_net_f1
 learning rate: 0.01
-batch size: 64
+batch size: 32
 n_outer: 80
-n_inner: 1800
+n_inner: 800
 
 # Normalization coefficient
 beta: 0.001
