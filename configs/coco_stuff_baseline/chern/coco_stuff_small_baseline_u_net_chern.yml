@@ -1,0 +1,6 @@
+agent: COCOStuffBaselineTrainer
+epochs: 100
+dataset path: /home/abhay/data/filtered_datasets/stuff_small_chern
+learning rate: 0.01
+batch size: 3
+model: u_net
