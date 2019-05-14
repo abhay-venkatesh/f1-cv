@@ -1,36 +1,33 @@
 from lib.agents.agent import Agent
-from lib.datasets.coco_stuff_f1 import COCOStuffF1
+from lib.datasets.coco_stuff_f1 import COCOSingleStuffF1
+from lib.models.seg_net import SegNetF1
 from lib.utils.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import importlib
 import torch
 
 
-class COCOStuffF1Trainer(Agent):
-    N_CLASSES = 92
+class COCOSingleStuffF1Trainer(Agent):
+    N_CLASSES = 2
 
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
+        trainset = COCOSingleStuffF1(
+            Path(self.config["dataset path"], "train"))
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
+        valset = COCOSingleStuffF1(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
-        net_module = importlib.import_module(
-            ("lib.models.{}".format(self.config["model"])))
-        net = getattr(net_module, "build_" + self.config["model"])
-
         # Model
-        model = net(n_classes=self.N_CLASSES).to(self.device)
+        model = SegNetF1(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants

@@ -1,36 +1,34 @@
 from lib.agents.agent import Agent
-from lib.datasets.coco_stuff_f1 import COCOStuffF1
-from lib.utils.functional import cross_entropy2d, get_iou, lagrange
+from lib.datasets.coco_stuff_f1 import COCOSingleStuffF1
+from lib.models.seg_net import SegNetF1
+from lib.utils.functional import cross_entropy2d, get_iou, partial_lagrange, \
+    sorted_project
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import importlib
 import torch
 
 
-class COCOStuffF1Trainer(Agent):
-    N_CLASSES = 92
+class COCOSingleStuffF1FPTrainer(Agent):
+    N_CLASSES = 2
 
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
+        trainset = COCOSingleStuffF1(
+            Path(self.config["dataset path"], "train"))
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
+        valset = COCOSingleStuffF1(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
-        net_module = importlib.import_module(
-            ("lib.models.{}".format(self.config["model"])))
-        net = getattr(net_module, "build_" + self.config["model"])
-
         # Model
-        model = net(n_classes=self.N_CLASSES).to(self.device)
+        model = SegNetF1(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants
@@ -98,8 +96,8 @@ class COCOStuffF1Trainer(Agent):
 
                 # Compute loss
                 t1_loss = cross_entropy2d(y0_, y0)
-                t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
-                                   lamb[i], mu, gamma[i])
+                t2_loss = partial_lagrange(num_positives, y1_, y1, w, eps,
+                                           tau[i], lamb[i], mu, gamma[i])
                 loss = t1_loss + (self.config["beta"] * t2_loss)
 
                 # Store losses for logging
@@ -112,10 +110,7 @@ class COCOStuffF1Trainer(Agent):
                 optimizer.step()
                 optimizer.zero_grad()
 
-                # Project eps to ensure non-negativity
-                eps.data = torch.max(
-                    torch.zeros(1, dtype=torch.float, device=self.device),
-                    eps.data)
+                sorted_project(eps, tau)
 
                 # Log and validate per epoch
                 if (step + 1) % len(train_loader) == 0:
