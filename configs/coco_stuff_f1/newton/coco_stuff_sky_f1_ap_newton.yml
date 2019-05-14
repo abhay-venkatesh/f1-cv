@@ -1,10 +1,10 @@
-agent: COCOStuffF1Trainer 
-dataset path: /home/abhay/data/filtered_datasets/stuff_small_clique
-model: deep_lab
+agent: COCOSingleStuffF1APTrainer 
+dataset path: /home/abhay/data/filtered_datasets/sky_newton
 learning rate: 0.01
-batch size: 144
+
+batch size: 6
 n_outer: 80
-n_inner: 800
+n_inner: 600
 
 # Normalization coefficient
 beta: 0.001

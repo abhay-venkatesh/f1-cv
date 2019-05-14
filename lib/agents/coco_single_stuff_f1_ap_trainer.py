@@ -1,6 +1,6 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff_f1 import COCOSingleStuffF1
-from lib.models.deep_lab import build_deep_lab_f1
+from lib.models.seg_net import SegNetF1
 from lib.utils.functional import cross_entropy2d, get_iou, partial_lagrange, \
     naive_project
 from pathlib import Path
@@ -10,7 +10,7 @@ from tqdm import tqdm
 import torch
 
 
-class COCOStuffF1Trainer(Agent):
+class COCOSingleStuffF1APTrainer(Agent):
     N_CLASSES = 2
 
     def run(self):
@@ -28,7 +28,7 @@ class COCOStuffF1Trainer(Agent):
             dataset=valset, batch_size=self.config["batch size"])
 
         # Model
-        model = build_deep_lab_f1(n_classes=self.N_CLASSES).to(self.device)
+        model = SegNetF1(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants
