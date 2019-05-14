@@ -1,5 +1,0 @@
-trainer: COCOStuffF1Trainer
-epochs: 10
-dataset path: D:\code\data\filtered_datasets\micro_full_bb
-learning rate: 0.001
-batch size: 4
