@@ -1,9 +1,10 @@
-agent: COCOSingleStuffF1Trainer 
-dataset path: D:\code\data\filtered_datasets\sky
+agent: COCOStuffF1Trainer 
+dataset path: D:\code\data\filtered_datasets\stuff_small
+model: esp_netv2_f1
 learning rate: 0.01
-batch size: 4
-n_outer: 40
-n_inner: 600
+batch size: 3
+n_outer: 80
+n_inner: 36000
 
 # Normalization coefficient
 beta: 0.001
