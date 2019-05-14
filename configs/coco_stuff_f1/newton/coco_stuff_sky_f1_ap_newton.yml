@@ -2,7 +2,6 @@ agent: COCOSingleStuffF1APTrainer
 dataset path: /home/abhay/data/filtered_datasets/sky
 learning rate: 0.01
 
-# TODO
 batch size: 7
 n_outer: 40
 n_inner: 600
