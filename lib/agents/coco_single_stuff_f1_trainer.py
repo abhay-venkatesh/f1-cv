@@ -1,5 +1,5 @@
 from lib.agents.agent import Agent
-from lib.datasets.coco_stuff_f1 import COCOStuffF1
+from lib.datasets.coco_stuff_f1 import COCOSingleStuffF1
 from lib.models.deep_lab import build_deep_lab_f1
 from lib.utils.functional import cross_entropy2d, get_iou, lagrange
 from pathlib import Path
@@ -10,18 +10,19 @@ import torch
 
 
 class COCOStuffF1Trainer(Agent):
-    N_CLASSES = 92
+    N_CLASSES = 2
 
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
+        trainset = COCOSingleStuffF1(
+            Path(self.config["dataset path"], "train"))
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
+        valset = COCOSingleStuffF1(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 

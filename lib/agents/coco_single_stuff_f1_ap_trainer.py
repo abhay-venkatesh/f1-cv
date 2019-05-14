@@ -1,7 +1,8 @@
 from lib.agents.agent import Agent
-from lib.datasets.coco_stuff_f1 import COCOStuffF1
+from lib.datasets.coco_stuff_f1 import COCOSingleStuffF1
 from lib.models.deep_lab import build_deep_lab_f1
-from lib.utils.functional import cross_entropy2d, get_iou, lagrange
+from lib.utils.functional import cross_entropy2d, get_iou, partial_lagrange, \
+    naive_project
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
@@ -10,18 +11,19 @@ import torch
 
 
 class COCOStuffF1Trainer(Agent):
-    N_CLASSES = 92
+    N_CLASSES = 2
 
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
+        trainset = COCOSingleStuffF1(
+            Path(self.config["dataset path"], "train"))
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
+        valset = COCOSingleStuffF1(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
@@ -94,8 +96,8 @@ class COCOStuffF1Trainer(Agent):
 
                 # Compute loss
                 t1_loss = cross_entropy2d(y0_, y0)
-                t2_loss = lagrange(num_positives, y1_, y1, w, eps, tau[i],
-                                   lamb[i], mu, gamma[i])
+                t2_loss = partial_lagrange(num_positives, y1_, y1, w, eps,
+                                           tau[i], lamb[i], mu, gamma[i])
                 loss = t1_loss + (self.config["beta"] * t2_loss)
 
                 # Store losses for logging
@@ -109,9 +111,7 @@ class COCOStuffF1Trainer(Agent):
                 optimizer.zero_grad()
 
                 # Project eps to ensure non-negativity
-                eps.data = torch.max(
-                    torch.zeros(1, dtype=torch.float, device=self.device),
-                    eps.data)
+                naive_project(eps, tau, i)
 
                 # Log and validate per epoch
                 if (step + 1) % len(train_loader) == 0:
