@@ -1,10 +1,9 @@
-agent: COCOStuffF1Trainer 
-dataset path: /home/abhay/data/filtered_datasets/stuff_small_fourier
-model: deep_lab
+agent: COCOSingleStuffF1FPTrainer 
+dataset path: /home/abhay/data/filtered_datasets/sky_chern
 learning rate: 0.01
-batch size: 120
-n_outer: 80
-n_inner: 800
+batch size: 7
+n_outer: 40
+n_inner: 600
 
 # Normalization coefficient
 beta: 0.001
