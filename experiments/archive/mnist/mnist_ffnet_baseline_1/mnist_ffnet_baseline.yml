@@ -1,0 +1,6 @@
+agent: MNISTBSTrainer
+dataset path: /home/abhay/data/mnistf1
+learning rate: 0.001
+batch size: 100
+epochs: 80
+model: FFNet

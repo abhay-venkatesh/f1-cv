@@ -1,8 +1,19 @@
+from pathlib import Path
 import csv
 import matplotlib.pyplot as plt
-from pathlib import Path
+
+import matplotlib.pylab as pylab
+params = {
+    'legend.fontsize': 'x-large',
+    'axes.labelsize': 'x-large',
+    'axes.titlesize': 'x-large',
+    'xtick.labelsize': 'x-large',
+    'ytick.labelsize': 'x-large'
+}
+pylab.rcParams.update(params)
 
 if __name__ == "__main__":
+
     baseline_ys = []
     with open(Path("./epoch_accuracy_baseline")) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
@@ -15,11 +26,18 @@ if __name__ == "__main__":
         for row in csv_reader:
             f1_ys.append(float(row[1]))
 
+    f1_fp_ys = []
+    with open(Path("./epochs_accuracy_f1_fp")) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        for row in csv_reader:
+            f1_fp_ys.append(float(row[1]))
+
     plt.style.use('ggplot')
     fig, ax = plt.subplots()
     ax.plot(baseline_ys, label="baseline")
     ax.plot(f1_ys, label="f1 normalized")
-    ax.set_xlabel("Epochs")
-    ax.set_ylabel("Acuracy")
+    ax.plot(f1_fp_ys, label="f1 normalized with full projections")
+    ax.set_xlabel("Epochs", fontsize=14)
+    ax.set_ylabel("Accuracy", fontsize=14)
     ax.legend()
-    plt.savefig("epochs_accuracy_comparison.png")
+    plt.savefig("mnist_big_small.png")

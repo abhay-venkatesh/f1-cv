@@ -1,6 +1,0 @@
-agent: COCOStuffBaselineTrainer
-epochs: 100
-dataset path: D:\code\data\filtered_datasets\coco_sky
-learning rate: 0.01
-batch size: 4
-checkpoint path: D:\code\src\f1-cv\experiments\coco_stuff_baseline\checkpoints\1.ckpt

@@ -1,16 +1,16 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuff
-from lib.models.seg_net import SegNet
-from lib.utils.functional import cross_entropy2d, get_iou
+from lib.utils.functional import get_iou, cross_entropy2d
 from pathlib import Path
 from statistics import mean
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+import importlib
 import torch
 
 
 class COCOStuffBaselineTrainer(Agent):
-    N_CLASSES = 2
+    N_CLASSES = 92
 
     def run(self):
         trainset = COCOStuff(Path(self.config["dataset path"], "train"))
@@ -23,7 +23,11 @@ class COCOStuffBaselineTrainer(Agent):
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
-        model = SegNet(n_classes=self.N_CLASSES).to(self.device)
+        net_module = importlib.import_module(
+            ("lib.models.{}".format(self.config["model"])))
+        net = getattr(net_module, "build_" + self.config["model"])
+
+        model = net(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
         optimizer = torch.optim.Adam(
             model.parameters(), lr=self.config["learning rate"])
