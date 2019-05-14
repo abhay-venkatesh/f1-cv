@@ -1,6 +1,5 @@
-import torch
+from lib.models.lightnet.inplace_abn.iabn import InPlaceABN
 import torch.nn as nn
-from modules.inplace_abn.iabn import InPlaceABN
 
 
 class InvertedResidual(nn.Module):
@@ -21,21 +20,41 @@ class InvertedResidual(nn.Module):
 
         self.conv = nn.Sequential(
             # step 1. point-wise convolution
-            nn.Conv2d(in_channels=inp, out_channels=inp * expand_ratio,
-                      kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.Conv2d(
+                in_channels=inp,
+                out_channels=inp * expand_ratio,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                dilation=1,
+                groups=1,
+                bias=False),
             nn.BatchNorm2d(num_features=inp * expand_ratio),
             nn.LeakyReLU(inplace=True, negative_slope=0.01),
 
             # step 2. depth-wise convolution
-            nn.Conv2d(in_channels=inp * expand_ratio, out_channels=inp * expand_ratio,
-                      kernel_size=3, stride=stride, padding=dilate, dilation=dilate,
-                      groups=inp * expand_ratio, bias=False),
+            nn.Conv2d(
+                in_channels=inp * expand_ratio,
+                out_channels=inp * expand_ratio,
+                kernel_size=3,
+                stride=stride,
+                padding=dilate,
+                dilation=dilate,
+                groups=inp * expand_ratio,
+                bias=False),
             nn.BatchNorm2d(num_features=inp * expand_ratio),
             nn.LeakyReLU(inplace=True, negative_slope=0.01),
 
             # step 3. point-wise convolution
-            nn.Conv2d(in_channels=inp * expand_ratio, out_channels=oup,
-                      kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.Conv2d(
+                in_channels=inp * expand_ratio,
+                out_channels=oup,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                dilation=1,
+                groups=1,
+                bias=False),
             nn.BatchNorm2d(num_features=oup),
         )
 
@@ -47,7 +66,13 @@ class InvertedResidual(nn.Module):
 
 
 class InvertedResidualIABN(nn.Module):
-    def __init__(self, inp, oup, stride, dilate, expand_ratio, norm_act=InPlaceABN):
+    def __init__(self,
+                 inp,
+                 oup,
+                 stride,
+                 dilate,
+                 expand_ratio,
+                 norm_act=InPlaceABN):
         """
         InvertedResidual: Core block of the MobileNetV2
         :param inp:    (int) Number of the input channels
@@ -65,20 +90,39 @@ class InvertedResidualIABN(nn.Module):
         self.conv = nn.Sequential(
             # step 1. point-wise convolution
             norm_act(inp),
-            nn.Conv2d(in_channels=inp, out_channels=inp * expand_ratio,
-                      kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False),
+            nn.Conv2d(
+                in_channels=inp,
+                out_channels=inp * expand_ratio,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                dilation=1,
+                groups=1,
+                bias=False),
 
             # step 2. depth-wise convolution
             norm_act(inp * expand_ratio),
-            nn.Conv2d(in_channels=inp * expand_ratio, out_channels=inp * expand_ratio,
-                      kernel_size=3, stride=stride, padding=dilate, dilation=dilate,
-                      groups=inp * expand_ratio, bias=False),
+            nn.Conv2d(
+                in_channels=inp * expand_ratio,
+                out_channels=inp * expand_ratio,
+                kernel_size=3,
+                stride=stride,
+                padding=dilate,
+                dilation=dilate,
+                groups=inp * expand_ratio,
+                bias=False),
 
             # step 3. point-wise convolution
             norm_act(inp * expand_ratio),
-            nn.Conv2d(in_channels=inp * expand_ratio, out_channels=oup,
-                      kernel_size=1, stride=1, padding=0, dilation=1, groups=1, bias=False)
-        )
+            nn.Conv2d(
+                in_channels=inp * expand_ratio,
+                out_channels=oup,
+                kernel_size=1,
+                stride=1,
+                padding=0,
+                dilation=1,
+                groups=1,
+                bias=False))
 
     def forward(self, x):
         if self.use_res_connect:
