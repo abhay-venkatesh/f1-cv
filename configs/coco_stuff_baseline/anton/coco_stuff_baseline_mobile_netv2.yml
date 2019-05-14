@@ -1,6 +1,6 @@
 agent: COCOStuffBaselineTrainer
 epochs: 100
-dataset path: D:\code\data\filtered_datasets\stuff
+dataset path: D:\code\data\filtered_datasets\stuff_8prod_toy
 learning rate: 0.01
 batch size: 3
 model: mobile_netv2
