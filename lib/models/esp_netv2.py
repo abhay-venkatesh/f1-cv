@@ -4,7 +4,6 @@ __license__ = "MIT"
 __maintainer__ = "Sachin Mehta"
 # ============================================
 
-from cnn.Model import EESPNet, EESP
 from torch import nn
 import os
 import torch
