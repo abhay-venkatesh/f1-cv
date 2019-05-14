@@ -98,12 +98,14 @@ def sorted_project(eps, tau):
 
 
 def naive_project(eps, tau, I):
+    temp_eps = eps.item()
     if eps < 0:
-        eps.data = torch.full_like(eps, 0)
+        eps.data = 0
     else:
         dummy = tau.clone().detach().cuda()
         for i in I:
-            if tau[i] > eps:
-                dummy[i] = (tau[i] + eps) / 2
-                eps.data = dummy[i]
+            if tau[i] > temp_eps:
+                dummy[i] = (tau[i].item() + temp_eps) / 2
+                temp_eps = dummy[i].item()
         tau.data = dummy
+        eps.data = torch.full_like(eps, temp_eps)
