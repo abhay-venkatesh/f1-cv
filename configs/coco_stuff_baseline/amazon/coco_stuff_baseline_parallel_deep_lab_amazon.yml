@@ -1,0 +1,6 @@
+agent: COCOStuffBaselineParallelTrainer
+epochs: 100
+dataset path: /home/ubuntu/data/filtered_datasets/stuff_amazon
+learning rate: 0.01
+batch size: 17
+model: deep_lab
