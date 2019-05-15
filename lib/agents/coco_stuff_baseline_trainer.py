@@ -19,6 +19,9 @@ class COCOStuffBaselineTrainer(Agent):
             batch_size=self.config["batch size"],
             shuffle=True)
 
+        valset = COCOStuff(Path(self.config["dataset path"], "val"))
+        val_loader = DataLoader(
+            dataset=valset, batch_size=self.config["batch size"])
 
         net_module = importlib.import_module(
             ("lib.models.{}".format(self.config["model"])))
@@ -44,6 +47,18 @@ class COCOStuffBaselineTrainer(Agent):
             avg_loss = total_loss / len(train_loader)
             self.logger.log("epoch", epoch, "loss", avg_loss)
 
+            model.eval()
+            ious = []
+            with torch.no_grad():
+                for X, Y in val_loader:
+                    X, Y = X.to(self.device), Y.long().to(self.device)
+                    Y_ = model(X)
+                    _, predicted = torch.max(Y_.data, 1)
+                    iou = get_iou(predicted, Y)
+                    ious.append(iou.item())
+
+            mean_iou = mean(ious)
+            self.logger.log("epoch", epoch, "iou", mean_iou)
 
             self.logger.graph()
 
