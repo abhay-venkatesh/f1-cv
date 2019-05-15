@@ -19,11 +19,10 @@ class COCOStuffBaselineParallelTrainer(Agent):
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
-        """
+
         valset = COCOStuff(Path(self.config["dataset path"], "val"))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
-        """
 
         net_module = importlib.import_module(
             ("lib.models.{}".format(self.config["model"])))
@@ -52,7 +51,7 @@ class COCOStuffBaselineParallelTrainer(Agent):
                 optimizer.zero_grad()
             avg_loss = total_loss / len(train_loader)
             self.logger.log("epoch", epoch, "loss", avg_loss)
-            """
+
             model.eval()
             ious = []
             with torch.no_grad():
@@ -65,7 +64,6 @@ class COCOStuffBaselineParallelTrainer(Agent):
 
             mean_iou = mean(ious)
             self.logger.log("epoch", epoch, "iou", mean_iou)
-            """
 
             self.logger.graph()
 
