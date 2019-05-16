@@ -28,8 +28,8 @@ class Configurator:
             config["crop width"] = 320
         if "crop height" not in config.keys():
             config["crop height"] = 320
-        if "in-memory" not in config.keys():
-            config["in-memory"] = False
+        if "in memory" not in config.keys():
+            config["in memory"] = False
         return config
 
     @classmethod
