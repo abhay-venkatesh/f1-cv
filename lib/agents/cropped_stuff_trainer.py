@@ -75,14 +75,12 @@ class CroppedStuffTrainer(Agent):
                 for X, Y in val_loader:
                     X, Y = X.to(self.device), Y.long().to(self.device)
                     Y_ = model(X)
-                    _, predicted = torch.max(Y_.data, 1)
 
                     _, H, W = Y.shape
-                    predicted = F.interpolate(
-                        predicted,
-                        size=(H, W),
-                        mode="bilinear",
-                        align_corners=False)
+                    Y_ = F.interpolate(
+                        Y_, size=(H, W), mode="bilinear", align_corners=False)
+
+                    _, predicted = torch.max(Y_.data, 1)
 
                     iou = get_iou(predicted, Y)
                     ious.append(iou.item())

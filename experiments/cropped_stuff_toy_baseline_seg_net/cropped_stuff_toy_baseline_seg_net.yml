@@ -1,6 +1,6 @@
 agent: CroppedStuffTrainer
 epochs: 100
-dataset path: D:\code\data\filtered_datasets\stuff
+dataset path: D:\code\data\filtered_datasets\stuff_toy
 learning rate: 0.01
 batch size: 8
-model: deep_lab
+model: seg_net
