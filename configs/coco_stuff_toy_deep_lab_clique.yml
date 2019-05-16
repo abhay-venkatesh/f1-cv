@@ -1,7 +1,7 @@
 agent: COCOStuffTrainer
 
 # Dataset
-dataset path: /home/abhay/data/filtered_datasets/full_stuff_clique
+dataset path: /home/abhay/data/filtered_datasets/full_stuff_toy_clique
 is cropped: true
 crop width: 321
 crop height: 321
