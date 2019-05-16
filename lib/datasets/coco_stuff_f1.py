@@ -120,10 +120,9 @@ class COCOStuffF1(data.Dataset):
         ]
         self._build()
 
-        if in_memory:
-            self.in_memory = in_memory
-            self.images = {}
-            self.targets = {}
+        self.in_memory = in_memory
+        self.images = {}
+        self.targets = {}
 
     def _build(self):
         self.f1_classes = []

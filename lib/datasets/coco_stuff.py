@@ -24,10 +24,9 @@ class COCOStuff(data.Dataset):
             if os.path.isfile(Path(image_folder, f))
         ]
 
-        if in_memory:
-            self.in_memory = in_memory
-            self.images = {}
-            self.targets = {}
+        self.in_memory = in_memory
+        self.images = {}
+        self.targets = {}
 
     def __getitem__(self, index):
         if index in self.images.keys():

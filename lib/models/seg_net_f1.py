@@ -1,7 +1,8 @@
-import torch.nn as nn
-import torchvision.models as models
 from lib.models.seg_net import SegNet, SegNetDown2, SegNetDown3, SegNetUp2, \
     SegNetUp3
+import torch
+import torch.nn as nn
+import torchvision.models as models
 
 
 class SegNetF1(SegNet):
@@ -54,4 +55,6 @@ class SegNetF1(SegNet):
 
 def build_seg_net_f1(n_classes=21):
     net = SegNetF1(n_classes=n_classes)
+    if torch.cuda.device_count() > 1:
+        net = nn.DataParallel(net)
     return net
