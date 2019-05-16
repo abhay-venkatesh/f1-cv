@@ -1,6 +1,6 @@
-agent: CroppedStuffTrainer
+agent: COCOStuffBaselineTrainer 
 epochs: 100
 dataset path: /home/abhay/data/filtered_datasets/sky_clique
 learning rate: 0.01
-batch size: 12
+batch size: 6
 model: seg_net
