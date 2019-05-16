@@ -79,11 +79,3 @@ def build_deep_lab(n_classes=21):
         net = nn.DataParallel(net)
         patch_replication_callback(net)
     return net
-
-
-def build_deep_lab_f1(n_classes=21):
-    net = DeepLabF1(n_classes=n_classes)
-    if torch.cuda.device_count() > 1:
-        net = nn.DataParallel(net)
-        patch_replication_callback(net)
-    return net

@@ -64,4 +64,6 @@ class UNet(nn.Module):
 
 def build_u_net(n_classes=21):
     net = UNet(n_class=n_classes)
+    if torch.cuda.device_count() > 1:
+        net = nn.DataParallel(net)
     return net
