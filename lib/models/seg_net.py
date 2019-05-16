@@ -1,5 +1,5 @@
-# Reference: https://github.com/meetshah1995/pytorch-semseg/blob/master/ptsemseg/models/segnet.py
 from lib.models.layers.conv2D import conv2DBatchNormRelu
+import torch
 import torch.nn as nn
 import torchvision.models as models
 
@@ -69,6 +69,8 @@ class SegNetUp3(nn.Module):
 
 
 class SegNet(nn.Module):
+    """ GitHub Reference: meetshah1995/pytorch-semseg """
+
     def __init__(self,
                  n_classes=21,
                  in_channels=3,
@@ -148,5 +150,7 @@ class SegNet(nn.Module):
 
 
 def build_seg_net(n_classes=21):
-    net = SegNet(n_classes=n_classes)
+    net = SegNet(n_class=n_classes)
+    if torch.cuda.device_count() > 1:
+        net = nn.DataParallel(net)
     return net
