@@ -13,4 +13,4 @@ model: deep_lab
 # Training hyperparameters 
 epochs: 100
 learning rate: 0.01
-batch size: 8
+batch size: 16
