@@ -3,4 +3,4 @@ epochs: 100
 dataset path: /home/abhay/data/filtered_datasets/stuff_clique
 learning rate: 0.01
 batch size: 16
-model: deep_lab
+model: deep_lab_f1
