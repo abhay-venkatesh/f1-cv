@@ -22,6 +22,10 @@ class Configurator:
             config["batch size"] = 1
         if "checkpoint path" not in config.keys():
             config["checkpoint path"] = None
+        if "crop width" not in config.keys():
+            config["crop width"] = 320
+        if "crop height" not in config.keys():
+            config["crop height"] = 320
         return config
 
     @classmethod
