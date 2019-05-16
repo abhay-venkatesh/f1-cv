@@ -150,7 +150,7 @@ class SegNet(nn.Module):
 
 
 def build_seg_net(n_classes=21):
-    net = SegNet(n_class=n_classes)
+    net = SegNet(n_classes=n_classes)
     if torch.cuda.device_count() > 1:
         net = nn.DataParallel(net)
     return net
