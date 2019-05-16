@@ -8,7 +8,6 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import importlib
 import torch
-import torch.nn.functional as F
 
 
 class CroppedStuffTrainer(Agent):
