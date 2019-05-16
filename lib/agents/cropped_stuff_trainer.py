@@ -10,7 +10,7 @@ import torch
 import torch.nn.functional as F
 
 
-class CroppedTrainer(Agent):
+class CroppedStuffTrainer(Agent):
     N_CLASSES = 92
 
     def run(self):
