@@ -4,3 +4,5 @@ dataset path: /home/abhay/data/filtered_datasets/stuff_small_clique
 learning rate: 0.01
 batch size: 144
 model: deep_lab
+
+# Note: ResNet-101 backbone was used
