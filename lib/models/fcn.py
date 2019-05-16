@@ -3,6 +3,8 @@ import torch.nn as nn
 
 
 class FCNs(nn.Module):
+    """ GitHub Reference: pochih/FCN-pytorch """
+
     def __init__(self, pretrained_net, n_class):
         super().__init__()
         self.n_class = n_class
