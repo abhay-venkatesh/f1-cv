@@ -17,7 +17,6 @@ class CroppedStuffTrainer(Agent):
     def run(self):
         trainset = COCOStuff(
             Path(self.config["dataset path"], "train"), is_cropped=True)
-            
         if ("crop width" in self.config.keys()
                 and "crop height" in self.config.keys()):
             trainset = COCOStuff(
@@ -25,7 +24,6 @@ class CroppedStuffTrainer(Agent):
                 crop_size=(self.config["crop width"],
                            self.config["crop height"]),
                 is_cropped=True)
-
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
@@ -33,6 +31,13 @@ class CroppedStuffTrainer(Agent):
 
         valset = COCOStuff(
             Path(self.config["dataset path"], "val"), is_cropped=True)
+        if ("crop width" in self.config.keys()
+                and "crop height" in self.config.keys()):
+            valset = COCOStuff(
+                Path(self.config["dataset path"], "val"),
+                crop_size=(self.config["crop width"],
+                           self.config["crop height"]),
+                is_cropped=True)
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 
