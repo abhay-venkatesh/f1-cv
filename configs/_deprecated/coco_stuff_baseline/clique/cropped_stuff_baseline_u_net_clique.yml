@@ -1,8 +1,0 @@
-agent: CroppedStuffTrainer
-epochs: 100
-dataset path: /home/abhay/data/filtered_datasets/stuff_clique
-learning rate: 0.01
-batch size: 8
-model: u_net
-crop width: 320
-crop height: 320

@@ -1,6 +1,0 @@
-agent: CroppedStuffTrainer
-epochs: 100
-dataset path: D:\code\data\filtered_datasets\sky
-learning rate: 0.01
-batch size: 3
-model: seg_net
