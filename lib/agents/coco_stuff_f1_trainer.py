@@ -14,14 +14,20 @@ class COCOStuffF1Trainer(Agent):
 
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"))
+        trainset = COCOStuffF1(
+            Path(self.config["dataset path"], "train"),
+            is_cropped=self.config["is cropped"],
+            crop_size=(self.config["crop width"], self.config["crop height"]))
         train_loader = DataLoader(
             dataset=trainset,
             batch_size=self.config["batch size"],
             shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(Path(self.config["dataset path"], "val"))
+        valset = COCOStuffF1(
+            Path(self.config["dataset path"], "val"),
+            is_cropped=self.config["is cropped"],
+            crop_size=(self.config["crop width"], self.config["crop height"]))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
 

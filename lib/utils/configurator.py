@@ -22,10 +22,14 @@ class Configurator:
             config["batch size"] = 1
         if "checkpoint path" not in config.keys():
             config["checkpoint path"] = None
+        if "is cropped" not in config.keys():
+            config["is cropped"] = False
         if "crop width" not in config.keys():
             config["crop width"] = 320
         if "crop height" not in config.keys():
             config["crop height"] = 320
+        if "in-memory" not in config.keys():
+            config["in-memory"] = False
         return config
 
     @classmethod

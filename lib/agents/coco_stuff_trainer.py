@@ -9,13 +9,13 @@ import importlib
 import torch
 
 
-class CroppedStuffTrainer(Agent):
+class COCOStuffTrainer(Agent):
     N_CLASSES = 92
 
     def run(self):
         trainset = COCOStuff(
             Path(self.config["dataset path"], "train"),
-            is_cropped=True,
+            is_cropped=self.config["is cropped"],
             crop_size=(self.config["crop width"], self.config["crop height"]))
         train_loader = DataLoader(
             dataset=trainset,
@@ -24,7 +24,7 @@ class CroppedStuffTrainer(Agent):
 
         valset = COCOStuff(
             Path(self.config["dataset path"], "val"),
-            is_cropped=True,
+            is_cropped=self.config["is cropped"],
             crop_size=(self.config["crop width"], self.config["crop height"]))
         val_loader = DataLoader(
             dataset=valset, batch_size=self.config["batch size"])
