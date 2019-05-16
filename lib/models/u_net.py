@@ -11,6 +11,8 @@ def double_conv(in_channels, out_channels):
 
 
 class UNet(nn.Module):
+    """ GitHub Reference: usuyama/pytorch-unet """
+
     def __init__(self, n_class):
         super().__init__()
 
@@ -20,8 +22,6 @@ class UNet(nn.Module):
         self.dconv_down4 = double_conv(256, 512)
 
         self.maxpool = nn.MaxPool2d(2)
-        self.upsample = nn.Upsample(
-            scale_factor=2, mode='bilinear', align_corners=True)
 
         self.dconv_up3 = double_conv(256 + 512, 256)
         self.dconv_up2 = double_conv(128 + 256, 128)
@@ -41,15 +41,18 @@ class UNet(nn.Module):
 
         x = self.dconv_down4(x)
 
-        x = self.upsample(x)
+        x = nn.functional.interpolate(
+            x, scale_factor=2, mode='bilinear', align_corners=True)
         x = torch.cat([x, conv3], dim=1)
 
         x = self.dconv_up3(x)
-        x = self.upsample(x)
+        x = nn.functional.interpolate(
+            x, scale_factor=2, mode='bilinear', align_corners=True)
         x = torch.cat([x, conv2], dim=1)
 
         x = self.dconv_up2(x)
-        x = self.upsample(x)
+        x = nn.functional.interpolate(
+            x, scale_factor=2, mode='bilinear', align_corners=True)
         x = torch.cat([x, conv1], dim=1)
 
         x = self.dconv_up1(x)
