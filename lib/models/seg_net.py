@@ -147,6 +147,6 @@ class SegNet(nn.Module):
                 l2.bias.data = l1.bias.data
 
 
-def build_seg_net_f1(n_classes=21):
-    net = SegNetF1(n_classes=n_classes)
+def build_seg_net(n_classes=21):
+    net = SegNet(n_classes=n_classes)
     return net

@@ -1,7 +1,7 @@
 from PIL import Image
 from pathlib import Path
 from tqdm import tqdm
-from utils.joint_transforms import RandomCrop
+from lib.utils.joint_transforms import RandomCrop
 import numpy as np
 import os
 import torch
