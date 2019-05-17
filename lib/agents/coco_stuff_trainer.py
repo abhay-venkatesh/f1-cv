@@ -70,4 +70,4 @@ class COCOStuffTrainer(Agent):
 
             self.logger.graph()
 
-            self._save_checkpoint(epochs, model, retain=True)
+            self._save_checkpoint(epoch, model, retain=True)
