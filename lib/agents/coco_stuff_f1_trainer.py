@@ -14,41 +14,44 @@ class COCOStuffF1Trainer(Agent):
 
     def run(self):
         # Training dataset
-        trainset = COCOStuffF1(Path(self.config["dataset path"], "train"),
-                               is_cropped=self.config["is cropped"],
-                               crop_size=(self.config["crop width"],
-                                          self.config["crop height"]),
-                               in_memory=self.config["in memory"])
-        train_loader = DataLoader(dataset=trainset,
-                                  batch_size=self.config["batch size"],
-                                  shuffle=True)
+        trainset = COCOStuffF1(
+            Path(self.config["dataset path"], "train"),
+            is_cropped=self.config["is cropped"],
+            crop_size=(self.config["img width"], self.config["img height"]),
+            in_memory=self.config["in memory"],
+            threshold=self.config["threshold"])
+        train_loader = DataLoader(
+            dataset=trainset,
+            batch_size=self.config["batch size"],
+            shuffle=True)
 
         # Validation dataset
-        valset = COCOStuffF1(Path(self.config["dataset path"], "val"),
-                             is_cropped=self.config["is cropped"],
-                             crop_size=(self.config["crop width"],
-                                        self.config["crop height"]),
-                             in_memory=self.config["in memory"])
-        val_loader = DataLoader(dataset=valset,
-                                batch_size=self.config["batch size"])
+        valset = COCOStuffF1(
+            Path(self.config["dataset path"], "val"),
+            is_cropped=self.config["is cropped"],
+            crop_size=(self.config["img width"], self.config["img height"]),
+            in_memory=self.config["in memory"],
+            threshold=self.config["threshold"])
+        val_loader = DataLoader(
+            dataset=valset, batch_size=self.config["batch size"])
 
         net_module = importlib.import_module(
             ("lib.models.{}".format(self.config["model"])))
         net = getattr(net_module, "build_" + self.config["model"])
 
         # Model
-        model = net(n_classes=self.N_CLASSES,
-                    size=(self.config["crop width"],
-                          self.config["crop height"])).to(self.device)
+        model = net(
+            n_classes=self.N_CLASSES,
+            size=(self.config["img width"],
+                  self.config["img height"])).to(self.device)
         start_epochs = self._load_checkpoint(model)
 
         # Constants
         num_positives = train_loader.dataset.num_positives
 
         # Primal variables
-        tau = torch.rand(len(train_loader.dataset),
-                         device=self.device,
-                         requires_grad=True)
+        tau = torch.rand(
+            len(train_loader.dataset), device=self.device, requires_grad=True)
         eps = torch.rand(1, device=self.device, requires_grad=True)
         w = torch.rand(1, device=self.device, requires_grad=True)
 
@@ -182,10 +185,10 @@ class COCOStuffF1Trainer(Agent):
                     y1 = y1.float()
                     y1_ = y1_.view(-1)
 
-                    lamb_cache[i] += (self.config["eta_lamb"] *
-                                      (y1 * (tau[i] - (w * y1_))))
-                    gamma_cache[i] += (self.config["eta_gamma"] *
-                                       (y1 * (tau[i] - eps)))
+                    lamb_cache[i] += (
+                        self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
+                    gamma_cache[i] += (
+                        self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
 
                 # Update data
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)

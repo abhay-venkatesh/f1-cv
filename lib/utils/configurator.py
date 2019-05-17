@@ -24,10 +24,10 @@ class Configurator:
             config["checkpoint path"] = None
         if "is cropped" not in config.keys():
             config["is cropped"] = False
-        if "crop width" not in config.keys():
-            config["crop width"] = 320
-        if "crop height" not in config.keys():
-            config["crop height"] = 320
+        if "img width" not in config.keys():
+            config["img width"] = 320
+        if "img height" not in config.keys():
+            config["img height"] = 320
         if "in memory" not in config.keys():
             config["in memory"] = False
         return config
