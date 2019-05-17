@@ -15,7 +15,7 @@ model: deep_lab_f1
 learning rate: 0.01
 batch size: 16
 n_outer: 80
-n_inner: 800
+n_inner: 8000
 
 # Normalization coefficient
 beta: 0.001
