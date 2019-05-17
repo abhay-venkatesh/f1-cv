@@ -1,0 +1,5 @@
+agent: FullCOCOStuffAgent 
+dataset path: D:\code\data\filtered_datasets\full_stuff_toy
+is cropped: true
+crop width: 321
+crop height: 321
