@@ -5,6 +5,7 @@ dataset path: /home/abhay/data/filtered_datasets/full_stuff_toy_clique
 is cropped: true
 crop width: 321
 crop height: 321
+threshold: 0.05
 
 # Model
 model: deep_lab_f1
