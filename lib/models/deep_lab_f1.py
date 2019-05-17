@@ -16,7 +16,8 @@ class DeepLabF1(DeepLab):
                  output_stride=16,
                  n_classes=21,
                  sync_bn=True,
-                 freeze_bn=False):
+                 freeze_bn=False,
+                 size=(321, 321)):
         super(DeepLabF1, self).__init__()
         if backbone == 'drn':
             output_stride = 8
@@ -33,7 +34,7 @@ class DeepLabF1(DeepLab):
         if freeze_bn:
             self.freeze_bn()
 
-        self.fc = nn.Linear(99360, 1)
+        self.fc = nn.Linear(size(0) * size(1), 1)
 
     def forward(self, input):
         x, low_level_feat = self.backbone(input)
