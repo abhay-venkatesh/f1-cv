@@ -5,12 +5,12 @@ dataset path: /home/abhay/data/filtered_datasets/full_stuff_toy_clique
 is cropped: true
 crop width: 321
 crop height: 321
-in memory: true
+in memory: false
 
 # Model
 model: deep_lab
 
 # Training hyperparameters 
-epochs: 100
+epochs: 50
 learning rate: 0.01
-batch size: 8
+batch size: 16

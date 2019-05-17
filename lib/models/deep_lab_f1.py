@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from lib.models.deep_lab import DeepLab
+import math
 
 
 class DeepLabF1(DeepLab):
@@ -16,7 +17,8 @@ class DeepLabF1(DeepLab):
                  output_stride=16,
                  n_classes=21,
                  sync_bn=True,
-                 freeze_bn=False):
+                 freeze_bn=False,
+                 size=(321, 321)):
         super(DeepLabF1, self).__init__()
         if backbone == 'drn':
             output_stride = 8
@@ -33,7 +35,7 @@ class DeepLabF1(DeepLab):
         if freeze_bn:
             self.freeze_bn()
 
-        self.fc = nn.Linear(99360, 1)
+        self.fc = nn.Linear((math.ceil(size[0]/4)*math.ceil(size[1]/4))*92, 1)
 
     def forward(self, input):
         x, low_level_feat = self.backbone(input)
@@ -46,8 +48,8 @@ class DeepLabF1(DeepLab):
         return x, f1
 
 
-def build_deep_lab_f1(n_classes=21):
-    net = DeepLabF1(n_classes=n_classes)
+def build_deep_lab_f1(n_classes=21, size=(321, 321)):
+    net = DeepLabF1(n_classes=n_classes, size=size)
     if torch.cuda.device_count() > 1:
         net = nn.DataParallel(net)
         patch_replication_callback(net)
