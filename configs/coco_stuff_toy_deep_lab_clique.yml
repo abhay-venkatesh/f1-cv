@@ -11,6 +11,6 @@ in memory: true
 model: deep_lab
 
 # Training hyperparameters 
-epochs: 100
+epochs: 50
 learning rate: 0.01
 batch size: 16
