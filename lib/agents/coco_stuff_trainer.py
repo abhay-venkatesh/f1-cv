@@ -13,23 +13,22 @@ class COCOStuffTrainer(Agent):
     N_CLASSES = 92
 
     def run(self):
-        trainset = COCOStuff(
-            Path(self.config["dataset path"], "train"),
-            is_cropped=self.config["is cropped"],
-            crop_size=(self.config["crop width"], self.config["crop height"]),
-            in_memory=self.config["in memory"])
-        train_loader = DataLoader(
-            dataset=trainset,
-            batch_size=self.config["batch size"],
-            shuffle=True)
+        trainset = COCOStuff(Path(self.config["dataset path"], "train"),
+                             is_cropped=self.config["is cropped"],
+                             crop_size=(self.config["crop width"],
+                                        self.config["crop height"]),
+                             in_memory=self.config["in memory"])
+        train_loader = DataLoader(dataset=trainset,
+                                  batch_size=self.config["batch size"],
+                                  shuffle=True)
 
-        valset = COCOStuff(
-            Path(self.config["dataset path"], "val"),
-            is_cropped=self.config["is cropped"],
-            crop_size=(self.config["crop width"], self.config["crop height"]),
-            in_memory=self.config["in memory"])
-        val_loader = DataLoader(
-            dataset=valset, batch_size=self.config["batch size"])
+        valset = COCOStuff(Path(self.config["dataset path"], "val"),
+                           is_cropped=self.config["is cropped"],
+                           crop_size=(self.config["crop width"],
+                                      self.config["crop height"]),
+                           in_memory=self.config["in memory"])
+        val_loader = DataLoader(dataset=valset,
+                                batch_size=self.config["batch size"])
 
         net_module = importlib.import_module(
             ("lib.models.{}".format(self.config["model"])))
@@ -37,8 +36,8 @@ class COCOStuffTrainer(Agent):
 
         model = net(n_classes=self.N_CLASSES).to(self.device)
         start_epochs = self._load_checkpoint(model)
-        optimizer = torch.optim.Adam(
-            model.parameters(), lr=self.config["learning rate"])
+        optimizer = torch.optim.Adam(model.parameters(),
+                                     lr=self.config["learning rate"])
 
         for epoch in tqdm(range(start_epochs, self.config["epochs"])):
 
@@ -70,4 +69,4 @@ class COCOStuffTrainer(Agent):
 
             self.logger.graph()
 
-            self._save_checkpoint(epoch, model)
+            self._save_checkpoint(epochs, model, retain=True)

@@ -160,7 +160,7 @@ class COCOStuffF1Trainer(Agent):
                     self.logger.graph()
 
                     # Checkpoint
-                    self._save_checkpoint(epochs, model)
+                    self._save_checkpoint(epochs, model, retain=True)
 
             # Dual Updates
             with torch.no_grad():
