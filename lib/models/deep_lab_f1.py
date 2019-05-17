@@ -35,7 +35,8 @@ class DeepLabF1(DeepLab):
         if freeze_bn:
             self.freeze_bn()
 
-        self.fc = nn.Linear((math.ceil(size[0]/4)*math.ceil(size[1]/4))*92, 1)
+        self.fc = nn.Linear(
+            (math.ceil(size[0] / 4) * math.ceil(size[1] / 4)) * 92, 1)
 
     def forward(self, input):
         x, low_level_feat = self.backbone(input)
