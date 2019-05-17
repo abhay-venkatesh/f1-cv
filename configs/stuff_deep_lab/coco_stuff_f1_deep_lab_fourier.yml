@@ -5,7 +5,7 @@ dataset path: /home/abhay/data/filtered_datasets/full_stuff_ubuntu
 is cropped: true
 crop width: 321
 crop height: 321
-in memory: false
+in memory: true
 threshold: 0.05
 
 # Model
@@ -15,7 +15,7 @@ model: deep_lab_f1
 learning rate: 0.01
 batch size: 16
 n_outer: 80
-n_inner: 800
+n_inner: 8000
 
 # Normalization coefficient
 beta: 0.001
