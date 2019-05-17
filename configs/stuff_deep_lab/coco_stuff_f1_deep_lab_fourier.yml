@@ -5,7 +5,7 @@ dataset path: /home/abhay/data/filtered_datasets/full_stuff_ubuntu
 is cropped: true
 crop width: 321
 crop height: 321
-in memory: false
+in memory: true
 threshold: 0.05
 
 # Model
