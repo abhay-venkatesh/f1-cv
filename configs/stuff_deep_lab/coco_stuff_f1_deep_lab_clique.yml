@@ -6,6 +6,7 @@ is cropped: true
 crop width: 321
 crop height: 321
 in memory: false
+threshold: 0.05
 
 # Model
 model: deep_lab_f1
