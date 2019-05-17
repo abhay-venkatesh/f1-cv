@@ -11,7 +11,7 @@ model: deep_lab_f1
 
 # Training hyperparameters 
 learning rate: 0.01
-batch size: 16
+batch size: 12
 n_outer: 80
 n_inner: 800
 
