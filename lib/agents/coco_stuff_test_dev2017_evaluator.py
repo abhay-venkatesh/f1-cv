@@ -22,6 +22,7 @@ class COCOStuffTestDev2017Evaluator(Agent):
         net = getattr(net_module, "build_" + self.config["model"])
 
         model = net(n_classes=self.N_CLASSES).to(self.device)
+        self._load_checkpoint(model)
 
         model.eval()
         with torch.no_grad():
