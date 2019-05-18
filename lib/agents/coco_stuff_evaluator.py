@@ -2,6 +2,8 @@ from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuffEval
 import importlib
 import torch
+from pathlib import Path
+from torch import nn
 
 # from pycocotools.cocostuffhelper import segmentationToCocoResult
 
@@ -20,7 +22,9 @@ class COCOStuffEvaluator(Agent):
             n_classes=self.N_CLASSES,
             size=(self.config["img width"],
                   self.config["img height"])).to(self.device)
-        self._load_checkpoint(model)
+        model = nn.DataParallel(model)
+        model.load_state_dict(
+                torch.load(Path(self.config["checkpoint path"])))
 
         model.eval()
         with torch.no_grad():
