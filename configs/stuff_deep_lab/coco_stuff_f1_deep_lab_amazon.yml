@@ -1,7 +1,7 @@
 agent: COCOStuffF1Trainer
 
 # Dataset
-dataset path: /home/ubuntu/data/filtered_datasets/full_stuff_toy_amazon
+dataset path: /home/ubuntu/data/filtered_datasets/full_stuff_amazon
 is cropped: true
 crop width: 321
 crop height: 321
@@ -13,9 +13,9 @@ model: deep_lab_f1
 
 # Training hyperparameters 
 learning rate: 0.01
-batch size: 28
+batch size: 48
 n_outer: 80
-n_inner: 40
+n_inner: 2300
 
 # Normalization coefficient
 beta: 0.001
