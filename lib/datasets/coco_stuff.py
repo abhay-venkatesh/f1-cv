@@ -62,17 +62,18 @@ class COCOStuff(data.Dataset):
 class COCOStuffEval(data.Dataset):
     def __init__(self, root):
         self.root = root
+        self.img_folder = Path(self.root, "test2017")
         with open(
-                Path(self.root, "image_info_test2017", "annotations",
+                Path(self.root, "annotations",
                      "image_info_test-dev2017.json")) as info_file:
             self.info = json.load(info_file)
-        self.images = [
+        self.img_names = [
             img_dict["file_name"] for img_dict in self.info["images"]
         ]
 
     def __getitem__(self, index):
         img_name = self.img_names[index]
-        img_path = Path(self.root, "images", img_name)
+        img_path = Path(self.img_folder, img_name)
         img = Image.open(img_path).convert('RGB')
         img = transforms.ToTensor()(img)
         return img
