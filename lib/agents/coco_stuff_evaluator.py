@@ -32,3 +32,5 @@ class COCOStuffEvaluator(Agent):
                 X = X.to(self.device)
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
+                print(predicted)
+                raise RuntimeError
