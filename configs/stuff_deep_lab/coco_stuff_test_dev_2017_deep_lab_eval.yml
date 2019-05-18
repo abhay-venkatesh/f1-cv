@@ -1,0 +1,3 @@
+agent: COCOStuffTestDev2017Evaluator
+dataset path: D:\code\data\filtered_datasets\stuff_test_dev_2017
+model: deep_lab_f1
