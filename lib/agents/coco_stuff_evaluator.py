@@ -6,7 +6,7 @@ import torch
 # from pycocotools.cocostuffhelper import segmentationToCocoResult
 
 
-class COCOStuffTestDev2017Evaluator(Agent):
+class COCOStuffEvaluator(Agent):
     N_CLASSES = 92
 
     def run(self):
