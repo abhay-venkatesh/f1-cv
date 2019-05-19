@@ -31,7 +31,7 @@ class COCOStuffEvaluator(Agent):
 
         model.eval()
         with torch.no_grad():
-            for img in testset:
+            for img, img_name in testset:
                 _, h, w = img.shape
                 windows, h_overlaps, w_overlaps = self._get_windows(img)
 
@@ -40,18 +40,23 @@ class COCOStuffEvaluator(Agent):
                 _, predicted = torch.max(Y_.data, 1)
                 seg = self._construct_mask(predicted, h, w)
 
-                X = torch.stack(h_overlaps).to(self.device)
-                Y_, _ = model(X)
-                _, predicted = torch.max(Y_.data, 1)
-                seg = self._apply_h_overlaps(predicted, seg, w)
+                if len(h_overlaps) != 0:
+                    X = torch.stack(h_overlaps).to(self.device)
+                    Y_, _ = model(X)
+                    _, predicted = torch.max(Y_.data, 1)
+                    self._apply_h_overlaps(predicted, seg, w)
 
-                X = torch.stack(w_overlaps).to(self.device)
-                Y_, _ = model(X)
-                _, predicted = torch.max(Y_.data, 1)
-                seg = self._apply_w_overlaps(predicted, seg, h)
+                if len(w_overlaps) != 0:
+                    X = torch.stack(w_overlaps).to(self.device)
+                    Y_, _ = model(X)
+                    _, predicted = torch.max(Y_.data, 1)
+                    self._apply_w_overlaps(predicted, seg, h)
 
                 seg_img = transforms.ToPILImage()(seg)
-                seg_img.save(Path(self.config["outputs folder"]))
+                seg_img.save(
+                    Path(self.config["outputs folder"],
+                         img_name.replace(".jpg", ".png")))
+
                 raise RuntimeError
 
     def _construct_mask(self, predicted, h, w):

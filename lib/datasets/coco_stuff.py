@@ -76,7 +76,7 @@ class COCOStuffEval(data.Dataset):
         img_path = Path(self.img_folder, img_name)
         img = Image.open(img_path).convert('RGB')
         img = transforms.ToTensor()(img)
-        return img
+        return img, img_name
 
     def __len__(self):
         return len(self.img_names)
