@@ -1,9 +1,10 @@
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuffEval
-import importlib
-import torch
 from pathlib import Path
 from torch import nn
+from torch.utils.data import DataLoader
+import importlib
+import torch
 
 # from pycocotools.cocostuffhelper import segmentationToCocoResult
 
@@ -13,6 +14,7 @@ class COCOStuffEvaluator(Agent):
 
     def run(self):
         testset = COCOStuffEval(self.config["dataset path"])
+        test_loader = DataLoader(dataset=testset, batch_size=2)
 
         net_module = importlib.import_module(
             ("lib.models.{}".format(self.config["model"])))
@@ -23,12 +25,11 @@ class COCOStuffEvaluator(Agent):
             size=(self.config["img width"],
                   self.config["img height"])).to(self.device)
         model = nn.DataParallel(model)
-        model.load_state_dict(
-                torch.load(Path(self.config["checkpoint path"])))
+        model.load_state_dict(torch.load(Path(self.config["checkpoint path"])))
 
         model.eval()
         with torch.no_grad():
-            for X in testset:
+            for X in test_loader:
                 X = X.to(self.device)
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
