@@ -34,7 +34,9 @@ class COCOStuffEvaluator(Agent):
         model.eval()
         coco_result = []
         with torch.no_grad():
-            for img, img_name in tqdm(testset):
+            # for img, img_name in tqdm(testset):
+            for img, img_name in tqdm([testset[1]]):
+                """ testing_images: [0, 1] """
                 img_ = self._resize(img)
                 _, h, w = img_.shape
 
@@ -44,14 +46,14 @@ class COCOStuffEvaluator(Agent):
                 _, predicted = torch.max(Y_.data, 1)
                 seg = self._construct_mask(predicted, h, w)
 
-                if len(h_overlaps) != 0:
+                if h_overlaps:
                     X = torch.stack(h_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
                     predicted = predicted.float()
                     seg = self._apply_h_overlaps(predicted, seg, h, w)
 
-                if len(w_overlaps) != 0:
+                if w_overlaps:
                     X = torch.stack(w_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
@@ -118,7 +120,7 @@ class COCOStuffEvaluator(Agent):
     def _apply_h_overlaps(self, predicted, seg, h, w):
         num_w_fits = w / self.WINDOW_SIZE
 
-        mask = torch.zeros((h, w)).float().cuda()
+        mask = torch.full((h, w), 93).float().cuda()
         for j in range(0, floor(num_w_fits)):
             h1, h2 = h - self.WINDOW_SIZE, h
             w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
@@ -130,11 +132,12 @@ class COCOStuffEvaluator(Agent):
     def _apply_w_overlaps(self, predicted, seg, h, w):
         num_h_fits = h / self.WINDOW_SIZE
 
-        mask = torch.zeros((h, w)).float().cuda()
+        mask = torch.full((h, w), 93).float().cuda()
         for i in range(0, floor(num_h_fits)):
             h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
             w1, w2 = w - self.WINDOW_SIZE, w
             mask[h1:h2, w1:w2] = predicted[i, :, :]
+
         seg[seg == 93] = mask[seg == 93]
 
         return seg
