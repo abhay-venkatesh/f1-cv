@@ -50,6 +50,7 @@ class COCOStuffEvaluator(Agent):
                     _, predicted = torch.max(Y_.data, 1)
                     predicted = predicted.float()
                     seg = self._apply_h_overlaps(predicted, seg, h, w)
+                self._show(seg)
 
                 if len(w_overlaps) != 0:
                     X = torch.stack(w_overlaps).to(self.device)
@@ -83,6 +84,12 @@ class COCOStuffEvaluator(Agent):
                 "w+") as f:
             json.dump(coco_result, f)
 
+    def _show(self, img_tensor):
+        img_tensor = img_tensor.cpu()
+        img = transforms.ToPILImage()(img_tensor)
+        img.show()
+        input("Press enter to continue...")
+
     def _resize(self, img):
         img = transforms.ToPILImage()(img)
 
@@ -97,7 +104,7 @@ class COCOStuffEvaluator(Agent):
         return transforms.ToTensor()(img)
 
     def _construct_mask(self, predicted, h, w):
-        seg = torch.zeros((h, w)).float().cuda()
+        seg = torch.full((h, w), 93).float().cuda()
         num_h_fits = h / self.WINDOW_SIZE
         num_w_fits = w / self.WINDOW_SIZE
         k = 0
@@ -111,20 +118,28 @@ class COCOStuffEvaluator(Agent):
 
     def _apply_h_overlaps(self, predicted, seg, h, w):
         num_w_fits = w / self.WINDOW_SIZE
+
+        mask = torch.zeros((h, w)).float().cuda()
         for j in range(0, floor(num_w_fits)):
             h1, h2 = h - self.WINDOW_SIZE, h
             w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
-            seg[h1:h2, w1:w2] = torch.round(
-                (seg[h1:h2, w1:w2] + predicted[j, :, :]) / 2)
+            mask[h1:h2, w1:w2] = predicted[j, :, :]
+        seg[seg != 93] = round((mask[seg != 93] + seg[seg != 93]) / 2)
+        seg[seg == 93] = mask[seg == 93]
+
         return seg
 
     def _apply_w_overlaps(self, predicted, seg, h, w):
         num_h_fits = h / self.WINDOW_SIZE
+
+        mask = torch.zeros((h, w)).float().cuda()
         for i in range(0, floor(num_h_fits)):
             h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
             w1, w2 = w - self.WINDOW_SIZE, w
-            seg[h1:h2, w1:w2] = torch.round(
-                (seg[h1:h2, w1:w2] + predicted[i, :, :]) / 2)
+            mask[h1:h2, w1:w2] = predicted[i, :, :]
+        seg[seg != 93] = round((mask[seg != 93] + seg[seg != 93]) / 2)
+        seg[seg == 93] = mask[seg == 93]
+
         return seg
 
     def _get_windows(self, img):
