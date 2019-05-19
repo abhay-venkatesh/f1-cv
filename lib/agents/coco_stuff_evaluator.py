@@ -39,19 +39,24 @@ class COCOStuffEvaluator(Agent):
                 X = torch.stack(windows).to(self.device)
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
+                print(predicted)
+                raise RuntimeError
                 seg = self._construct_mask(predicted, h, w)
 
                 if len(h_overlaps) != 0:
                     X = torch.stack(h_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
-                    self._apply_h_overlaps(predicted, seg, w)
+                    seg = self._apply_h_overlaps(predicted, seg, h, w)
 
                 if len(w_overlaps) != 0:
                     X = torch.stack(w_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
-                    self._apply_w_overlaps(predicted, seg, h)
+                    seg = self._apply_w_overlaps(predicted, seg, h, w)
+
+                self._output_mask(seg, img_name)
+                raise RuntimeError
 
                 seg_array = seg.numpy()
                 seg_array = seg_array.astype(np.uint8)
@@ -84,11 +89,23 @@ class COCOStuffEvaluator(Agent):
                 k += 1
         return seg
 
-    def _apply_h_overlaps(self, predicted, seg, w):
-        raise NotImplementedError
+    def _apply_h_overlaps(self, predicted, seg, h, w):
+        num_w_fits = w / self.WINDOW_SIZE
+        for j in range(0, floor(num_w_fits)):
+            h1, h2 = h - self.WINDOW_SIZE, h
+            w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
+            seg[h1:h2, w1:w2] = torch.round(
+                (seg[h1:h2, w1:w2] + predicted[j, :, :]) / 2)
+        return seg
 
-    def _apply_w_overlaps(self, predicted, seg, h):
-        raise NotImplementedError
+    def _apply_w_overlaps(self, predicted, seg, h, w):
+        num_h_fits = h / self.WINDOW_SIZE
+        for i in range(0, floor(num_h_fits)):
+            h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
+            w1, w2 = w - self.WINDOW_SIZE, w
+            seg[h1:h2, w1:w2] = torch.round(
+                (seg[h1:h2, w1:w2] + predicted[i, :, :]) / 2)
+        return seg
 
     def _get_windows(self, img):
         _, h, w = img.shape
@@ -106,14 +123,14 @@ class COCOStuffEvaluator(Agent):
             for j in range(0, floor(num_w_fits)):
                 h1, h2 = h - self.WINDOW_SIZE, h
                 w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
-                windows.append(img[:, h1:h2, w1:w2])
+                h_overlaps.append(img[:, h1:h2, w1:w2])
 
         w_overlaps = []
         if not num_w_fits.is_integer():
             for i in range(0, floor(num_h_fits)):
                 h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
                 w1, w2 = w - self.WINDOW_SIZE, w
-                windows.append(img[:, h1:h2, w1:w2])
+                w_overlaps.append(img[:, h1:h2, w1:w2])
 
         return windows, h_overlaps, w_overlaps
 
