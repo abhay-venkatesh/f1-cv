@@ -8,8 +8,8 @@ from torch import nn
 from torchvision import transforms
 from tqdm import tqdm
 import importlib
-import json
 import numpy as np
+import simplejson as json
 import torch
 
 
@@ -71,20 +71,21 @@ class COCOStuffEvaluator(Agent):
                     stuffStartId=0)
                 coco_result.extend(anns)
 
-        with open(Path(self.config["outputs folder"],
-                       "coco_result.json")) as f:
+        with open(
+                Path(self.config["outputs folder"], "coco_result.json"),
+                "w+") as f:
             json.dump(coco_result, f)
 
     def _resize(self, img):
         img = transforms.ToPILImage()(img)
 
-        h, w = img.size
-        if h < self.WINDOW_SIZE:
-            img = img.resize((w, self.WINDOW_SIZE), Image.BILINEAR)
-
-        h, w = img.size
+        w, h = img.size
         if w < self.WINDOW_SIZE:
             img = img.resize((self.WINDOW_SIZE, h), Image.BILINEAR)
+
+        w, h = img.size
+        if h < self.WINDOW_SIZE:
+            img = img.resize((w, self.WINDOW_SIZE), Image.BILINEAR)
 
         return transforms.ToTensor()(img)
 
