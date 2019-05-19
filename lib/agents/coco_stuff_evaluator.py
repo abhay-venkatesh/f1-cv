@@ -54,6 +54,7 @@ class COCOStuffEvaluator(Agent):
                     self._apply_w_overlaps(predicted, seg, h)
 
                 seg_array = seg.numpy()
+                seg_array = seg_array.astype(np.uint8)
                 anns = segmentationToCocoResult(
                     seg_array,
                     int(img_name.replace(".jpg", "")),
@@ -84,10 +85,10 @@ class COCOStuffEvaluator(Agent):
         return seg
 
     def _apply_h_overlaps(self, predicted, seg, w):
-        pass
+        raise NotImplementedError
 
     def _apply_w_overlaps(self, predicted, seg, h):
-        pass
+        raise NotImplementedError
 
     def _get_windows(self, img):
         _, h, w = img.shape
