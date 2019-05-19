@@ -39,14 +39,14 @@ class COCOStuffEvaluator(Agent):
                 X = torch.stack(windows).to(self.device)
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
-                print(predicted)
-                raise RuntimeError
                 seg = self._construct_mask(predicted, h, w)
 
                 if len(h_overlaps) != 0:
                     X = torch.stack(h_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
+                    print(seg.type())
+                    print(predicted.type())
                     seg = self._apply_h_overlaps(predicted, seg, h, w)
 
                 if len(w_overlaps) != 0:
