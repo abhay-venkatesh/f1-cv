@@ -44,12 +44,14 @@ class COCOStuffEvaluator(Agent):
                 _, predicted = torch.max(Y_.data, 1)
                 seg = self._construct_mask(predicted, h, w)
 
+                print(torch.unique(seg))
                 if len(h_overlaps) != 0:
                     X = torch.stack(h_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
                     predicted = predicted.float()
                     seg = self._apply_h_overlaps(predicted, seg, h, w)
+                print(torch.unique(seg))
                 self._show(seg)
 
                 if len(w_overlaps) != 0:
@@ -124,7 +126,6 @@ class COCOStuffEvaluator(Agent):
             h1, h2 = h - self.WINDOW_SIZE, h
             w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
             mask[h1:h2, w1:w2] = predicted[j, :, :]
-        seg[seg != 93] = round((mask[seg != 93] + seg[seg != 93]) / 2)
         seg[seg == 93] = mask[seg == 93]
 
         return seg
@@ -137,7 +138,6 @@ class COCOStuffEvaluator(Agent):
             h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
             w1, w2 = w - self.WINDOW_SIZE, w
             mask[h1:h2, w1:w2] = predicted[i, :, :]
-        seg[seg != 93] = round((mask[seg != 93] + seg[seg != 93]) / 2)
         seg[seg == 93] = mask[seg == 93]
 
         return seg
