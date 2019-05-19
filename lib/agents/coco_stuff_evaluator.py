@@ -1,11 +1,12 @@
-# from torchvision import transforms
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuffEval
 from math import floor
 from pathlib import Path
 from pycocotools import mask
 from torch import nn
+from torchvision import transforms
 import importlib
+import json
 import numpy as np
 import torch
 
@@ -29,6 +30,7 @@ class COCOStuffEvaluator(Agent):
         model.load_state_dict(torch.load(Path(self.config["checkpoint path"])))
 
         model.eval()
+        coco_result = []
         with torch.no_grad():
             for img, img_name in testset:
                 _, h, w = img.shape
@@ -56,15 +58,17 @@ class COCOStuffEvaluator(Agent):
                     seg_array,
                     int(img_name.replace(".jpg", "")),
                     stuffStartId=0)
-                print(anns)
-                """
-                seg_img = transforms.ToPILImage()(seg)
-                seg_img.save(
-                    Path(self.config["outputs folder"],
-                         img_name.replace(".jpg", ".png")))
-                """
+                coco_result.extend(anns)
 
-                raise RuntimeError
+        with open(Path(self.config["outputs folder"],
+                       "coco_result.json")) as f:
+            json.dump(coco_result, f)
+
+    def _output_mask(self, seg, img_name):
+        seg_img = transforms.ToPILImage()(seg)
+        seg_img.save(
+            Path(self.config["outputs folder"], img_name.replace(
+                ".jpg", ".png")))
 
     def _construct_mask(self, predicted, h, w):
         seg = torch.zeros((h, w))
