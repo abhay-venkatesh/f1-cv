@@ -1,3 +1,4 @@
+from PIL import Image
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuffEval
 from math import floor
@@ -5,6 +6,7 @@ from pathlib import Path
 from pycocotools import mask
 from torch import nn
 from torchvision import transforms
+from tqdm import tqdm
 import importlib
 import json
 import numpy as np
@@ -32,10 +34,11 @@ class COCOStuffEvaluator(Agent):
         model.eval()
         coco_result = []
         with torch.no_grad():
-            for img, img_name in testset:
-                _, h, w = img.shape
-                windows, h_overlaps, w_overlaps = self._get_windows(img)
+            for img, img_name in tqdm(testset):
+                img_ = self._resize(img)
+                _, h, w = img_.shape
 
+                windows, h_overlaps, w_overlaps = self._get_windows(img_)
                 X = torch.stack(windows).to(self.device)
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
@@ -45,21 +48,23 @@ class COCOStuffEvaluator(Agent):
                     X = torch.stack(h_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
-                    print(seg.type())
-                    print(predicted.type())
+                    predicted = predicted.float()
                     seg = self._apply_h_overlaps(predicted, seg, h, w)
 
                 if len(w_overlaps) != 0:
                     X = torch.stack(w_overlaps).to(self.device)
                     Y_, _ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
+                    predicted = predicted.float()
                     seg = self._apply_w_overlaps(predicted, seg, h, w)
 
-                self._output_mask(seg, img_name)
-                raise RuntimeError
-
-                seg_array = seg.numpy()
+                seg_array = seg.cpu().numpy()
                 seg_array = seg_array.astype(np.uint8)
+                if seg.shape != img.shape[1:]:
+                    seg = Image.fromarray(seg_array)
+                    seg = seg.resize((img.shape[1:]), Image.NEAREST)
+                    seg_array = np.array(seg)
+
                 anns = segmentationToCocoResult(
                     seg_array,
                     int(img_name.replace(".jpg", "")),
@@ -70,14 +75,28 @@ class COCOStuffEvaluator(Agent):
                        "coco_result.json")) as f:
             json.dump(coco_result, f)
 
+    def _resize(self, img):
+        img = transforms.ToPILImage()(img)
+
+        h, w = img.size
+        if h < self.WINDOW_SIZE:
+            img = img.resize((w, self.WINDOW_SIZE), Image.BILINEAR)
+
+        h, w = img.size
+        if w < self.WINDOW_SIZE:
+            img = img.resize((self.WINDOW_SIZE, h), Image.BILINEAR)
+
+        return transforms.ToTensor()(img)
+
     def _output_mask(self, seg, img_name):
+        seg = seg.cpu()
         seg_img = transforms.ToPILImage()(seg)
         seg_img.save(
             Path(self.config["outputs folder"], img_name.replace(
                 ".jpg", ".png")))
 
     def _construct_mask(self, predicted, h, w):
-        seg = torch.zeros((h, w))
+        seg = torch.zeros((h, w)).float().cuda()
         num_h_fits = h / self.WINDOW_SIZE
         num_w_fits = w / self.WINDOW_SIZE
         k = 0
