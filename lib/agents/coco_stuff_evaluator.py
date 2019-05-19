@@ -58,12 +58,19 @@ class COCOStuffEvaluator(Agent):
                     predicted = predicted.float()
                     seg = self._apply_w_overlaps(predicted, seg, h, w)
 
+                # Write segmentation as PNG output
                 seg_array = seg.cpu().numpy()
                 seg_array = seg_array.astype(np.uint8)
                 if seg.shape != img.shape[1:]:
                     seg = Image.fromarray(seg_array)
-                    seg = seg.resize((img.shape[1:]), Image.NEAREST)
+                    seg = seg.resize((img.shape[2], img.shape[1]),
+                                     Image.NEAREST)
                     seg_array = np.array(seg)
+
+                seg_img = Image.fromarray(seg_array)
+                seg_img.save(
+                    Path(self.config["outputs folder"],
+                         img_name.replace(".jpg", ".png")))
 
                 anns = segmentationToCocoResult(
                     seg_array,
@@ -88,13 +95,6 @@ class COCOStuffEvaluator(Agent):
             img = img.resize((w, self.WINDOW_SIZE), Image.BILINEAR)
 
         return transforms.ToTensor()(img)
-
-    def _output_mask(self, seg, img_name):
-        seg = seg.cpu()
-        seg_img = transforms.ToPILImage()(seg)
-        seg_img.save(
-            Path(self.config["outputs folder"], img_name.replace(
-                ".jpg", ".png")))
 
     def _construct_mask(self, predicted, h, w):
         seg = torch.zeros((h, w)).float().cuda()
