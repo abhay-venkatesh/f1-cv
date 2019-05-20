@@ -1,0 +1,7 @@
+agent: COCOStuffEvaluator
+dataset path: /home/abhay/data/cocostuff/evaluation
+model: deep_lab_f1
+checkpoint path: /home/abhay/code/src/f1-cv/experiments/archive/coco_stuff/coco_stuff_full/coco_stuff_f1_deep_lab_amazon/checkpoints/9.ckpt
+
+eval split divisor: 10
+split number: 9
