@@ -36,8 +36,8 @@ class COCOStuffEvaluator(Agent):
         model.eval()
         coco_result = []
         with torch.no_grad():
-            # for img, img_name in tqdm(testset):
-            for img, img_name in tqdm([testset[1]]):
+            for img, img_name in tqdm(testset):
+                # for img, img_name in tqdm([testset[1]]):
                 """ testing_images: [0, 1] """
                 img_ = self._resize(img)
 
@@ -65,8 +65,6 @@ class COCOStuffEvaluator(Agent):
                     int(img_name.replace(".jpg", "")),
                     stuffStartId=0)
                 coco_result.extend(anns)
-
-                raise RuntimeError
 
         with open(
                 Path(self.config["outputs folder"], "coco_result.json"),
