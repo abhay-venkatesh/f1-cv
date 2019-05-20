@@ -15,6 +15,6 @@ pip install slidingwindow
 
 ```bash
 conda env create -f environment.yml
-pip install pycocotools
-pip install slidingwindow
+conda activate f1-cv
+pip install -r requirements.txt
 ```
