@@ -10,3 +10,11 @@ conda env create -f environment.yml
 pip install "git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI"
 pip install slidingwindow
 ```
+
+### Ubuntu
+
+```bash
+conda env create -f environment.yml
+pip install pycocotools
+pip install slidingwindow
+```
