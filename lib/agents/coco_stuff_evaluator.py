@@ -139,7 +139,7 @@ class COCOStuffEvaluator(Agent):
         else:
             # All predictions are single predictions
             seg = torch.squeeze(pred_stack, dim=0)
-            seg_array = seg.numpy()
+            seg_array = seg.cpu().numpy()
 
         seg_array = seg_array.astype(np.uint8)
 
