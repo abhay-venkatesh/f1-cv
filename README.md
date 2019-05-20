@@ -7,6 +7,7 @@ F1 normalization with applications in computer vision.
 
 ```bash
 conda env create -f environment.yml
+conda activate f1-cv
 pip install "git+https://github.com/philferriere/cocoapi.git#egg=pycocotools&subdirectory=PythonAPI"
 pip install slidingwindow
 ```
@@ -16,5 +17,6 @@ pip install slidingwindow
 ```bash
 conda env create -f environment.yml
 conda activate f1-cv
-pip install -r requirements.txt
+pip install pycocotools
+pip install slidingwindow
 ```
