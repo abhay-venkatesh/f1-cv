@@ -17,7 +17,7 @@ import torch
 class COCOStuffEvaluator(Agent):
     N_CLASSES = 92
     WINDOW_SIZE = 320
-    WINDOW_OVERLAP_PERCENT = 0.5
+    WINDOW_OVERLAP_PERCENT = 0.50
 
     def run(self):
         testset = COCOStuffEval(self.config["dataset path"])
