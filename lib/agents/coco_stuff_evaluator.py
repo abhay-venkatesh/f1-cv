@@ -35,9 +35,13 @@ class COCOStuffEvaluator(Agent):
 
         model.eval()
         coco_result = []
+        eval_start = round(self.config["split number"] *
+                           (len(testset) / self.config["eval split divisor"]))
+        eval_end = round((self.config["split number"] + 1) *
+                         (len(testset) / self.config["eval split divisor"]))
         with torch.no_grad():
-            for img, img_name in tqdm(testset):
-                # for img, img_name in tqdm([testset[1]]):
+            for i in tqdm(range(eval_start, eval_end)):
+                img, img_name = testset[i]
                 """ testing_images: [0, 1] """
                 img_ = self._resize(img)
 
