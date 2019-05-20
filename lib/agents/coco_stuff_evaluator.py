@@ -98,24 +98,28 @@ class COCOStuffEvaluator(Agent):
     def _get_seg(self, predicted, windows, img):
         _, h, w = img.shape
         n_predictions, _, _ = predicted.shape
-        seg = torch.full((n_predictions, h, w), self.N_CLASSES).float().cuda()
+        seg = torch.full((h, w), self.N_CLASSES).float()
+        pred_stack = torch.full((n_predictions, h, w),
+                                self.N_CLASSES).float().cuda()
         for i, window in enumerate(windows):
             indice = (slice(i, i + 1), window.indices()[1],
                       window.indices()[2])
-            seg[indice] = predicted[i, :, :]
+            pred_stack[indice] = predicted[i, :, :]
 
         # If only a single prediction is made for a pixel, take that
         # prediction
-        seg = seg.cpu()
-        twothvalue, _ = torch.kthvalue(seg, 2, dim=0)
+        pred_stack = pred_stack.cpu()
+        twothvalue, _ = torch.kthvalue(pred_stack, 2, dim=0)
         # If the 2th smallest value is self.N_CLASSES, then only a single
         # prediction was made for that pixel
-        twothvalue = torch.stack([twothvalue] * n_predictions)
         # So we take the single prediction for that pixel
-        seg[twothvalue == self.N_CLASSES], _ = torch.min(
-            seg[twothvalue == self.N_CLASSES], dim=0, keepdim=True)
+        single_predicted, _ = torch.min(pred_stack, dim=0)
+        seg[twothvalue == self.N_CLASSES] = single_predicted[twothvalue ==
+                                                             self.N_CLASSES]
+
         # self._display_tensor(img)
         self._display_tensor(seg)
+        raise RuntimeError
 
         # For the rest pixels, i.e. those pixels with more than one prediction,
         # take the majority vote among those predictions
