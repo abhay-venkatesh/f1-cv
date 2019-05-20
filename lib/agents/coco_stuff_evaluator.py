@@ -107,15 +107,15 @@ class COCOStuffEvaluator(Agent):
         # If only a single prediction is made for a pixel, take that
         # prediction
         seg = seg.cpu()
-
-        # The 2th smallest value
         twothvalue, _ = torch.kthvalue(seg, 2, dim=0)
-
         # If the 2th smallest value is self.N_CLASSES, then only a single
         # prediction was made for that pixel
         twothvalue = torch.stack([twothvalue] * n_predictions)
+        # So we take the single prediction for that pixel
         seg[twothvalue == self.N_CLASSES], _ = torch.min(
             seg[twothvalue == self.N_CLASSES], dim=0, keepdim=True)
+        # self._display_tensor(img)
+        self._display_tensor(seg)
 
         # For the rest pixels, i.e. those pixels with more than one prediction,
         # take the majority vote among those predictions
