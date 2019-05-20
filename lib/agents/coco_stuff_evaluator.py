@@ -98,17 +98,34 @@ class COCOStuffEvaluator(Agent):
     def _get_seg(self, predicted, windows, img):
         _, h, w = img.shape
         n_predictions, _, _ = predicted.shape
-        seg = torch.zeros((n_predictions, h, w)).float().cuda()
+        seg = torch.full((n_predictions, h, w), self.N_CLASSES).float().cuda()
         for i, window in enumerate(windows):
-            indice = (slice(i, i+1), window.indices()[1], window.indices()[2])
+            indice = (slice(i, i + 1), window.indices()[1],
+                      window.indices()[2])
             seg[indice] = predicted[i, :, :]
-            self._display_tensor(seg[indice])
-            raise RuntimeError
 
-        seg = seg.cpu().numpy()
+        # If only a single prediction is made for a pixel, take that
+        # prediction
+        seg = seg.cpu()
+
+        # The 2th smallest value
+        twothvalue, _ = torch.kthvalue(seg, 2, dim=0)
+
+        # If the 2th smallest value is self.N_CLASSES, then only a single
+        # prediction was made for that pixel
+        twothvalue = torch.stack([twothvalue] * n_predictions)
+        seg[twothvalue == self.N_CLASSES], _ = torch.min(
+            seg[twothvalue == self.N_CLASSES], dim=0, keepdim=True)
+
+        # For the rest pixels, i.e. those pixels with more than one prediction,
+        # take the majority vote among those predictions
+        seg = seg.numpy()
+        twothvalue = twothvalue.numpy()
         # torch.mode() not working
-        seg, _ = mode(seg, axis=0)
+        seg[seg == self.N_CLASSES] = np.nan
+        seg, _ = mode(seg, axis=0, nan_policy="omit")
         seg = np.squeeze(seg, axis=0)
+        seg = seg.astype(np.uint8)
         return torch.tensor(seg)
 
     def _display_tensor(self, img_tensor):
