@@ -1,8 +1,7 @@
 from PIL import Image
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuffEval
-from scipy.stats import mode
-from numpy.lib import stride_tricks
+from math import floor
 from pathlib import Path
 from pycocotools import mask
 from torch import nn
@@ -12,7 +11,6 @@ import importlib
 import numpy as np
 import simplejson as json
 import torch
-import slidingwindow
 
 
 class COCOStuffEvaluator(Agent):
@@ -20,7 +18,6 @@ class COCOStuffEvaluator(Agent):
     WINDOW_SIZE = 320
 
     def run(self):
-        raise NotImplementedError
         testset = COCOStuffEval(self.config["dataset path"])
 
         net_module = importlib.import_module(
@@ -41,15 +38,27 @@ class COCOStuffEvaluator(Agent):
             for img, img_name in tqdm([testset[1]]):
                 """ testing_images: [0, 1] """
                 img_ = self._resize(img)
+                _, h, w = img_.shape
 
-                img_windows, windows = self._get_img_windows(img_)
-
-                X = torch.stack(img_windows).to(self.device)
+                windows, h_overlaps, w_overlaps = self._get_windows(img_)
+                X = torch.stack(windows).to(self.device)
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
+                seg = self._construct_mask(predicted, h, w)
 
-                seg = self._get_seg(predicted, windows, img_)
-                raise RuntimeError
+                if h_overlaps:
+                    X = torch.stack(h_overlaps).to(self.device)
+                    Y_, _ = model(X)
+                    _, predicted = torch.max(Y_.data, 1)
+                    predicted = predicted.float()
+                    seg = self._apply_h_overlaps(predicted, seg, h, w)
+
+                if w_overlaps:
+                    X = torch.stack(w_overlaps).to(self.device)
+                    Y_, _ = model(X)
+                    _, predicted = torch.max(Y_.data, 1)
+                    predicted = predicted.float()
+                    seg = self._apply_w_overlaps(predicted, seg, h, w)
 
                 # Write segmentation as PNG output
                 seg_array = seg.cpu().numpy()
@@ -76,29 +85,6 @@ class COCOStuffEvaluator(Agent):
                 "w+") as f:
             json.dump(coco_result, f)
 
-    def _get_img_windows(self, img):
-        img = np.array(img)
-        windows = slidingwindow.generate(
-            img, slidingwindow.DimOrder.ChannelHeightWidth, self.WINDOW_SIZE,
-            0.5)
-
-        img_windows = []
-        for window in windows:
-            rect = (window.x, window.y, window.w, window.h)
-            square = slidingwindow.fitToSize(
-                rect, self.WINDOW_SIZE, self.WINDOW_SIZE,
-                (0, 0, img.shape[2], img.shape[1]))
-            window = slidingwindow.SlidingWindow(
-                square[0], square[1], square[2], square[3],
-                slidingwindow.DimOrder.ChannelHeightWidth)
-            img_windows.append(torch.tensor(img[window.indices()]))
-        return img_windows, window
-
-    def _get_seg(self, predicted, windows, img):
-        _, h, w = img.shape
-        seg = torch.zeros((h, w)).float().cuda()
-        pass
-
     def _show(self, img_tensor):
         img_tensor = img_tensor.cpu()
         img = transforms.ToPILImage()(img_tensor)
@@ -117,6 +103,71 @@ class COCOStuffEvaluator(Agent):
             img = img.resize((w, self.WINDOW_SIZE), Image.BILINEAR)
 
         return transforms.ToTensor()(img)
+
+    def _construct_mask(self, predicted, h, w):
+        seg = torch.full((h, w), 93).float().cuda()
+        num_h_fits = h / self.WINDOW_SIZE
+        num_w_fits = w / self.WINDOW_SIZE
+        k = 0
+        for i in range(0, floor(num_h_fits)):
+            for j in range(0, floor(num_w_fits)):
+                h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
+                w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
+                seg[h1:h2, w1:w2] = predicted[k, :, :]
+                k += 1
+        return seg
+
+    def _apply_h_overlaps(self, predicted, seg, h, w):
+        num_w_fits = w / self.WINDOW_SIZE
+
+        mask = torch.full((h, w), 93).float().cuda()
+        for j in range(0, floor(num_w_fits)):
+            h1, h2 = h - self.WINDOW_SIZE, h
+            w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
+            mask[h1:h2, w1:w2] = predicted[j, :, :]
+        seg[seg == 93] = mask[seg == 93]
+
+        return seg
+
+    def _apply_w_overlaps(self, predicted, seg, h, w):
+        num_h_fits = h / self.WINDOW_SIZE
+
+        mask = torch.full((h, w), 93).float().cuda()
+        for i in range(0, floor(num_h_fits)):
+            h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
+            w1, w2 = w - self.WINDOW_SIZE, w
+            mask[h1:h2, w1:w2] = predicted[i, :, :]
+
+        seg[seg == 93] = mask[seg == 93]
+
+        return seg
+
+    def _get_windows(self, img):
+        _, h, w = img.shape
+        num_h_fits = h / self.WINDOW_SIZE
+        num_w_fits = w / self.WINDOW_SIZE
+        windows = []
+        for i in range(0, floor(num_h_fits)):
+            for j in range(0, floor(num_w_fits)):
+                h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
+                w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
+                windows.append(img[:, h1:h2, w1:w2])
+
+        h_overlaps = []
+        if not num_h_fits.is_integer():
+            for j in range(0, floor(num_w_fits)):
+                h1, h2 = h - self.WINDOW_SIZE, h
+                w1, w2 = j * self.WINDOW_SIZE, (j + 1) * self.WINDOW_SIZE
+                h_overlaps.append(img[:, h1:h2, w1:w2])
+
+        w_overlaps = []
+        if not num_w_fits.is_integer():
+            for i in range(0, floor(num_h_fits)):
+                h1, h2 = i * self.WINDOW_SIZE, (i + 1) * self.WINDOW_SIZE
+                w1, w2 = w - self.WINDOW_SIZE, w
+                w_overlaps.append(img[:, h1:h2, w1:w2])
+
+        return windows, h_overlaps, w_overlaps
 
 
 def segmentationToCocoResult(labelMap, imgId, stuffStartId=92):
