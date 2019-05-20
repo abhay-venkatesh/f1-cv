@@ -12,3 +12,5 @@ dependencies:
 - torchvision
 - scikit-image
 - opencv
+- cython
+- simplejson
