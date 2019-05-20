@@ -9,6 +9,7 @@ from torchvision import transforms
 from tqdm import tqdm
 import importlib
 import numpy as np
+import os
 import simplejson as json
 import slidingwindow
 import torch
@@ -33,6 +34,12 @@ class COCOStuffEvaluator(Agent):
         model = nn.DataParallel(model)
         model.load_state_dict(torch.load(Path(self.config["checkpoint path"])))
 
+        # For checking if output already produced
+        output_names = [
+            f for f in os.listdir(self.config["outputs folder"])
+            if os.path.isfile(Path(self.config["outputs folder"], f))
+        ]
+
         model.eval()
         coco_result = []
         eval_start = round(self.config["split number"] *
@@ -42,33 +49,36 @@ class COCOStuffEvaluator(Agent):
         with torch.no_grad():
             for i in tqdm(range(eval_start, eval_end)):
                 img, img_name = testset[i]
-                """ testing_images: [0, 1] """
-                img_ = self._resize(img)
 
-                img_windows, windows = self._get_img_windows(img_)
+                # Only compute if not already computed
+                if img_name.replace(".jpg", ".png") not in output_names:
 
-                X = torch.stack(img_windows).to(self.device)
-                Y_, _ = model(X)
-                _, predicted = torch.max(Y_.data, 1)
+                    img_ = self._resize(img)
 
-                seg_array = self._get_seg_array(predicted, windows, img_)
+                    img_windows, windows = self._get_img_windows(img_)
 
-                # Write segmentation as PNG output
-                seg_img = Image.fromarray(seg_array)
-                if seg_array.shape != img.shape[1:]:
+                    X = torch.stack(img_windows).to(self.device)
+                    Y_, _ = model(X)
+                    _, predicted = torch.max(Y_.data, 1)
+
+                    seg_array = self._get_seg_array(predicted, windows, img_)
+
+                    # Write segmentation as PNG output
                     seg_img = Image.fromarray(seg_array)
-                    seg_img = seg_img.resize((img.shape[2], img.shape[1]),
-                                             Image.NEAREST)
+                    if seg_array.shape != img.shape[1:]:
+                        seg_img = Image.fromarray(seg_array)
+                        seg_img = seg_img.resize((img.shape[2], img.shape[1]),
+                                                 Image.NEAREST)
 
-                seg_img.save(
-                    Path(self.config["outputs folder"],
-                         img_name.replace(".jpg", ".png")))
+                    seg_img.save(
+                        Path(self.config["outputs folder"],
+                             img_name.replace(".jpg", ".png")))
 
-                anns = segmentationToCocoResult(
-                    seg_array,
-                    int(img_name.replace(".jpg", "")),
-                    stuffStartId=0)
-                coco_result.extend(anns)
+                    anns = segmentationToCocoResult(
+                        seg_array,
+                        int(img_name.replace(".jpg", "")),
+                        stuffStartId=0)
+                    coco_result.extend(anns)
 
         with open(
                 Path(self.config["outputs folder"], "coco_result.json"),
@@ -104,29 +114,35 @@ class COCOStuffEvaluator(Agent):
                       window.indices()[2])
             pred_stack[indice] = predicted[i, :, :]
 
-        # If only a single prediction is made for a pixel, take that
-        # prediction
-        pred_stack = pred_stack.cpu()
-        twothvalue, _ = torch.kthvalue(pred_stack, 2, dim=0)
-        # If the 2th smallest value is self.N_CLASSES, then only a single
-        # prediction was made for that pixel
-        # So we take the single prediction for that pixel
-        single_predicted, _ = torch.min(pred_stack, dim=0)
-        seg[twothvalue == self.N_CLASSES] = single_predicted[twothvalue ==
-                                                             self.N_CLASSES]
+        if n_predictions > 1:
+            # If only a single prediction is made for a pixel, take that
+            # prediction
+            pred_stack = pred_stack.cpu()
+            twothvalue, _ = torch.kthvalue(pred_stack, 2, dim=0)
+            # If the 2th smallest value is self.N_CLASSES, then only a single
+            # prediction was made for that pixel
+            # So we take the single prediction for that pixel
+            single_predicted, _ = torch.min(pred_stack, dim=0)
+            seg[twothvalue == self.N_CLASSES] = single_predicted[
+                twothvalue == self.N_CLASSES]
+            pred_stack = pred_stack.numpy()
+            seg_array = seg.numpy()
+            twothvalue = twothvalue.numpy()
+            # For the rest pixels, i.e. those pixels with more than one
+            #  prediction, take the majority vote among those predictions
+            pred_stack[pred_stack == self.N_CLASSES] = np.nan
+            # torch.mode() not working
+            majority_vote, _ = mode(pred_stack, axis=0, nan_policy="omit")
+            majority_vote = np.squeeze(majority_vote, axis=0)
+            seg_array[twothvalue != self.N_CLASSES] = majority_vote[
+                twothvalue != self.N_CLASSES]
+        else:
+            # All predictions are single predictions
+            seg = torch.squeeze(pred_stack, dim=0)
+            seg_array = seg.numpy()
 
-        pred_stack = pred_stack.numpy()
-        seg_array = seg.numpy()
-        twothvalue = twothvalue.numpy()
-        # For the rest pixels, i.e. those pixels with more than one prediction,
-        # take the majority vote among those predictions
-        pred_stack[pred_stack == self.N_CLASSES] = np.nan
-        # torch.mode() not working
-        majority_vote, _ = mode(pred_stack, axis=0, nan_policy="omit")
-        majority_vote = np.squeeze(majority_vote, axis=0)
-        seg_array[twothvalue != self.N_CLASSES] = majority_vote[
-            twothvalue != self.N_CLASSES]
         seg_array = seg_array.astype(np.uint8)
+
         return seg_array
 
     def _display_tensor(self, img_tensor):
