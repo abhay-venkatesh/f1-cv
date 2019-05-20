@@ -47,19 +47,15 @@ class COCOStuffEvaluator(Agent):
                 Y_, _ = model(X)
                 _, predicted = torch.max(Y_.data, 1)
 
-                seg = self._get_seg(predicted, windows, img_)
-                self._display_tensor(seg)
+                seg_array = self._get_seg_array(predicted, windows, img_)
 
                 # Write segmentation as PNG output
-                seg_array = seg.cpu().numpy()
-                seg_array = seg_array.astype(np.uint8)
-                if seg.shape != img.shape[1:]:
-                    seg = Image.fromarray(seg_array)
-                    seg = seg.resize((img.shape[2], img.shape[1]),
-                                     Image.NEAREST)
-                    seg_array = np.array(seg)
-
                 seg_img = Image.fromarray(seg_array)
+                if seg_array.shape != img.shape[1:]:
+                    seg_img = Image.fromarray(seg_array)
+                    seg_img = seg_img.resize((img.shape[2], img.shape[1]),
+                                             Image.NEAREST)
+
                 seg_img.save(
                     Path(self.config["outputs folder"],
                          img_name.replace(".jpg", ".png")))
@@ -95,7 +91,7 @@ class COCOStuffEvaluator(Agent):
             img_windows.append(torch.tensor(img[window.indices()]))
         return img_windows, windows
 
-    def _get_seg(self, predicted, windows, img):
+    def _get_seg_array(self, predicted, windows, img):
         _, h, w = img.shape
         n_predictions, _, _ = predicted.shape
         seg = torch.full((h, w), self.N_CLASSES).float()
@@ -117,24 +113,28 @@ class COCOStuffEvaluator(Agent):
         seg[twothvalue == self.N_CLASSES] = single_predicted[twothvalue ==
                                                              self.N_CLASSES]
 
-        # self._display_tensor(img)
-        self._display_tensor(seg)
-        raise RuntimeError
-
+        pred_stack = pred_stack.numpy()
+        seg_array = seg.numpy()
+        twothvalue = twothvalue.numpy()
         # For the rest pixels, i.e. those pixels with more than one prediction,
         # take the majority vote among those predictions
-        seg = seg.numpy()
-        twothvalue = twothvalue.numpy()
+        pred_stack[pred_stack == self.N_CLASSES] = np.nan
         # torch.mode() not working
-        seg[seg == self.N_CLASSES] = np.nan
-        seg, _ = mode(seg, axis=0, nan_policy="omit")
-        seg = np.squeeze(seg, axis=0)
-        seg = seg.astype(np.uint8)
-        return torch.tensor(seg)
+        majority_vote, _ = mode(pred_stack, axis=0, nan_policy="omit")
+        majority_vote = np.squeeze(majority_vote, axis=0)
+        seg_array[twothvalue != self.N_CLASSES] = majority_vote[
+            twothvalue != self.N_CLASSES]
+        seg_array = seg_array.astype(np.uint8)
+        return seg_array
 
     def _display_tensor(self, img_tensor):
         img_tensor = img_tensor.cpu()
         img = transforms.ToPILImage()(img_tensor)
+        img.show()
+        input("Press enter to continue...")
+
+    def _display_np_array(self, np_array):
+        img = Image.fromarray(np_array)
         img.show()
         input("Press enter to continue...")
 
