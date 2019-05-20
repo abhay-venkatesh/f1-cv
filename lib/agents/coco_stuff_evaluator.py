@@ -50,8 +50,17 @@ class COCOStuffEvaluator(Agent):
             for i in tqdm(range(eval_start, eval_end)):
                 img, img_name = testset[i]
 
-                # Only compute if not already computed
-                if img_name.replace(".jpg", ".png") not in output_names:
+                seg_name = img_name.replace(".jpg", ".png")
+                if seg_name in output_names:
+                    seg_img = Image.open(
+                        Path(self.config["outputs folder"], seg_name))
+                    seg_array = np.array(seg_img)
+                    anns = segmentationToCocoResult(
+                        seg_array,
+                        int(img_name.replace(".jpg", "")),
+                        stuffStartId=0)
+                    coco_result.extend(anns)
+                else:
 
                     img_ = self._resize(img)
 
@@ -70,9 +79,7 @@ class COCOStuffEvaluator(Agent):
                         seg_img = seg_img.resize((img.shape[2], img.shape[1]),
                                                  Image.NEAREST)
 
-                    seg_img.save(
-                        Path(self.config["outputs folder"],
-                             img_name.replace(".jpg", ".png")))
+                    seg_img.save(Path(self.config["outputs folder"], seg_name))
 
                     anns = segmentationToCocoResult(
                         seg_array,
