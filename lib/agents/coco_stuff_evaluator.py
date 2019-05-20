@@ -1,26 +1,25 @@
 from PIL import Image
 from lib.agents.agent import Agent
 from lib.datasets.coco_stuff import COCOStuffEval
-from scipy.stats import mode
-from numpy.lib import stride_tricks
 from pathlib import Path
 from pycocotools import mask
+from scipy.stats import mode
 from torch import nn
 from torchvision import transforms
 from tqdm import tqdm
 import importlib
 import numpy as np
 import simplejson as json
-import torch
 import slidingwindow
+import torch
 
 
 class COCOStuffEvaluator(Agent):
     N_CLASSES = 92
     WINDOW_SIZE = 320
+    WINDOW_OVERLAP_PERCENT = 0.5
 
     def run(self):
-        raise NotImplementedError
         testset = COCOStuffEval(self.config["dataset path"])
 
         net_module = importlib.import_module(
@@ -49,7 +48,7 @@ class COCOStuffEvaluator(Agent):
                 _, predicted = torch.max(Y_.data, 1)
 
                 seg = self._get_seg(predicted, windows, img_)
-                raise RuntimeError
+                self._display_tensor(seg)
 
                 # Write segmentation as PNG output
                 seg_array = seg.cpu().numpy()
@@ -71,6 +70,8 @@ class COCOStuffEvaluator(Agent):
                     stuffStartId=0)
                 coco_result.extend(anns)
 
+                raise RuntimeError
+
         with open(
                 Path(self.config["outputs folder"], "coco_result.json"),
                 "w+") as f:
@@ -80,7 +81,7 @@ class COCOStuffEvaluator(Agent):
         img = np.array(img)
         windows = slidingwindow.generate(
             img, slidingwindow.DimOrder.ChannelHeightWidth, self.WINDOW_SIZE,
-            0.5)
+            self.WINDOW_OVERLAP_PERCENT)
 
         img_windows = []
         for window in windows:
@@ -92,14 +93,25 @@ class COCOStuffEvaluator(Agent):
                 square[0], square[1], square[2], square[3],
                 slidingwindow.DimOrder.ChannelHeightWidth)
             img_windows.append(torch.tensor(img[window.indices()]))
-        return img_windows, window
+        return img_windows, windows
 
     def _get_seg(self, predicted, windows, img):
         _, h, w = img.shape
-        seg = torch.zeros((h, w)).float().cuda()
-        pass
+        n_predictions, _, _ = predicted.shape
+        seg = torch.zeros((n_predictions, h, w)).float().cuda()
+        for i, window in enumerate(windows):
+            indice = (slice(i, i+1), window.indices()[1], window.indices()[2])
+            seg[indice] = predicted[i, :, :]
+            self._display_tensor(seg[indice])
+            raise RuntimeError
 
-    def _show(self, img_tensor):
+        seg = seg.cpu().numpy()
+        # torch.mode() not working
+        seg, _ = mode(seg, axis=0)
+        seg = np.squeeze(seg, axis=0)
+        return torch.tensor(seg)
+
+    def _display_tensor(self, img_tensor):
         img_tensor = img_tensor.cpu()
         img = transforms.ToPILImage()(img_tensor)
         img.show()
