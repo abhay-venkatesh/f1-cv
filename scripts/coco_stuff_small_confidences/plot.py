@@ -8,6 +8,8 @@ def set_styles():
     # Seaborn
     sns.set_context("paper")
     sns.set_style("ticks")
+    # sns.set_palette(sns.color_palette("RdBu_r", 7))
+    sns.set_palette(sns.diverging_palette(220, 20, n=7))
 
 
 def get_data():
