@@ -9,10 +9,10 @@ def set_styles():
     sns.set_context("paper")
     sns.set_style("ticks")
     # sns.set_palette(sns.color_palette("RdBu_r", 7))
-    sns.set_palette(sns.diverging_palette(220, 20, n=7))
+    sns.set_palette(sns.diverging_palette(220, 10, sep=80, n=7))
 
 
-def get_data():
+def get_f1_data():
     df = pd.read_csv(
         Path("data", "f1", "beta_0001_mu_003"), sep=',', header=None)
     df.columns = ["Epoch", "Mean IoU"]
@@ -29,8 +29,19 @@ def get_data():
     return df
 
 
-def plot(df):
-    plotobj = sns.lineplot(x="Epoch", y="Mean IoU", data=df)
+def get_baseline_data():
+    df_ = pd.read_csv(Path("data", "baseline"), sep=',', header=None)
+    df_.columns = ["Epoch", "Mean IoU"]
+    df_.Epoch += 1
+
+
+def plot():
+    f1_data = get_f1_data()
+    plotobj = sns.lineplot(x="Epoch", y="Mean IoU", data=f1_data)
+
+    baseline_data = get_baseline_data()
+    plotobj = sns.lineplot(x="Epoch", y="Mean IoU", data=baseline_data)
+
     sns.despine()
     fig = plotobj.get_figure()
     fig.tight_layout()
@@ -38,8 +49,7 @@ def plot(df):
 
 
 def main():
-    df = get_data()
-    plot(df)
+    plot()
 
 
 if __name__ == "__main__":
