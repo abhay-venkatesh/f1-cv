@@ -4,13 +4,14 @@ import os
 import seaborn as sns
 
 PALETTE = sns.diverging_palette(220, 10, n=7)
+FONT_SCALE = 1.5
+STYLE = "ticks"
+CONTEXT = "paper"
 
 
 def set_styles():
-    # Seaborn
-    sns.set_context("paper")
-    sns.set(style="ticks", font_scale=1)
-    # sns.set_palette(sns.color_palette("RdBu_r", 7))
+    sns.set_context(CONTEXT)
+    sns.set(style=STYLE, font_scale=FONT_SCALE)
     sns.set_palette(PALETTE)
 
 
