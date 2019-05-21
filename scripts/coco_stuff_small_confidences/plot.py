@@ -5,7 +5,9 @@ import seaborn as sns
 
 
 def set_styles():
-    sns.set(style="darkgrid")
+    # Seaborn
+    sns.set_context("paper")
+    sns.set_style("ticks")
 
 
 def get_data():
@@ -27,7 +29,10 @@ def get_data():
 
 def plot(df):
     plotobj = sns.lineplot(x="Epoch", y="Mean IoU", data=df)
-    plotobj.get_figure().savefig("test.png")
+    sns.despine()
+    fig = plotobj.get_figure()
+    fig.tight_layout()
+    fig.savefig("test.png")
 
 
 def main():
