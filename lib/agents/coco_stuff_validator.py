@@ -15,7 +15,7 @@ import slidingwindow
 import torch
 
 
-class COCOStuffEvaluator(Agent):
+class COCOStuffValidator(Agent):
     N_CLASSES = 92
     WINDOW_SIZE = 320
     WINDOW_OVERLAP_PERCENT = 0.50
