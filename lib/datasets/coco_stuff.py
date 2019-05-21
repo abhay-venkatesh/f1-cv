@@ -80,3 +80,11 @@ class COCOStuffEval(data.Dataset):
 
     def __len__(self):
         return len(self.img_names)
+
+
+class COCOStuffVal(COCOStuffEval):
+    def __init__(self, root):
+        self.img_folder = root
+        self.img_names = [
+            f for f in os.listdir(root) if os.path.isfile(Path(root, f))
+        ]
