@@ -82,19 +82,9 @@ class COCOStuffEval(data.Dataset):
         return len(self.img_names)
 
 
-class COCOStuffVal(data.Dataset):
+class COCOStuffVal(COCOStuffEval):
     def __init__(self, root):
-        self.root = root
+        self.img_folder = root
         self.img_names = [
             f for f in os.listdir(root) if os.path.isfile(Path(root, f))
         ]
-
-    def __getitem__(self, index):
-        img_name = self.img_names[index]
-        img_path = Path(self.img_folder, img_name)
-        img = Image.open(img_path).convert('RGB')
-        img = transforms.ToTensor()(img)
-        return img, img_name
-
-    def __len__(self):
-        return len(self.img_names)
