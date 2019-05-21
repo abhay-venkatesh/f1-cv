@@ -2,4 +2,4 @@ __pycache__
 checkpoints
 pretrained
 .DS_Store
-experiments/coco_stuff_deep_lab_eval_*/outputs
+experiments/archive/coco_stuff/coco_stuff_deep_lab_eval/coco_stuff_deep_lab_eval_*/outputs
