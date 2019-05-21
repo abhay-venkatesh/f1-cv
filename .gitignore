@@ -3,3 +3,4 @@ checkpoints
 pretrained
 .DS_Store
 experiments/coco_stuff_deep_lab_eval_*/outputs
+experiments/coco_stuff_deep_lab_val_*/outputs
