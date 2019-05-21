@@ -1,5 +1,0 @@
-agent: FullCOCOStuffAgent 
-dataset path: /home/abhay/data/filtered_datasets/full_stuff_clique
-is cropped: true
-crop width: 321
-crop height: 321
