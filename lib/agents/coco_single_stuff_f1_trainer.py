@@ -14,17 +14,18 @@ class COCOSingleStuffF1Trainer(Agent):
 
     def run(self):
         # Training dataset
-        trainset = COCOSingleStuffF1(
-            Path(self.config["dataset path"], "train"))
-        train_loader = DataLoader(
-            dataset=trainset,
-            batch_size=self.config["batch size"],
-            shuffle=True)
+        trainset = COCOSingleStuffF1(Path(self.config["dataset path"],
+                                          "train"),
+                                     threshold=self.config["threshold"])
+        train_loader = DataLoader(dataset=trainset,
+                                  batch_size=self.config["batch size"],
+                                  shuffle=True)
 
         # Validation dataset
-        valset = COCOSingleStuffF1(Path(self.config["dataset path"], "val"))
-        val_loader = DataLoader(
-            dataset=valset, batch_size=self.config["batch size"])
+        valset = COCOSingleStuffF1(Path(self.config["dataset path"], "val"),
+                                   threshold=self.config["threshold"])
+        val_loader = DataLoader(dataset=valset,
+                                batch_size=self.config["batch size"])
 
         # Model
         model = SegNetF1(n_classes=self.N_CLASSES).to(self.device)
@@ -34,8 +35,9 @@ class COCOSingleStuffF1Trainer(Agent):
         num_positives = train_loader.dataset.num_positives
 
         # Primal variables
-        tau = torch.rand(
-            len(train_loader.dataset), device=self.device, requires_grad=True)
+        tau = torch.rand(len(train_loader.dataset),
+                         device=self.device,
+                         requires_grad=True)
         eps = torch.rand(1, device=self.device, requires_grad=True)
         w = torch.rand(1, device=self.device, requires_grad=True)
 
@@ -169,10 +171,10 @@ class COCOSingleStuffF1Trainer(Agent):
                     y1 = y1.float()
                     y1_ = y1_.view(-1)
 
-                    lamb_cache[i] += (
-                        self.config["eta_lamb"] * (y1 * (tau[i] - (w * y1_))))
-                    gamma_cache[i] += (
-                        self.config["eta_gamma"] * (y1 * (tau[i] - eps)))
+                    lamb_cache[i] += (self.config["eta_lamb"] *
+                                      (y1 * (tau[i] - (w * y1_))))
+                    gamma_cache[i] += (self.config["eta_gamma"] *
+                                       (y1 * (tau[i] - eps)))
 
                 # Update data
                 mu.data += self.config["eta_mu"] * (mu_cache - 1)

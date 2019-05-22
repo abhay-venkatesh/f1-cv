@@ -54,8 +54,8 @@ class COCOStuffF1(data.Dataset):
 
             positives = 0
             for i in np.unique(seg_array):
-                fraction = (seg_array == i).sum() / (
-                    seg_array.shape[0] * seg_array.shape[1])
+                fraction = (seg_array == i).sum() / (seg_array.shape[0] *
+                                                     seg_array.shape[1])
 
                 if fraction > self.thresholds[i]:
                     positives += 1
@@ -102,12 +102,16 @@ class COCOStuffF1(data.Dataset):
 class COCOSingleStuffF1(data.Dataset):
     IMG_HEIGHT = 426
     IMG_WIDTH = 640
-    THRESHOLD = 0.6
 
-    def __init__(self, root, is_cropped=False, crop_size=(321, 321)):
+    def __init__(self,
+                 root,
+                 is_cropped=False,
+                 crop_size=(321, 321),
+                 threshold=0.6):
         self.root = root
         self.crop_size = crop_size
         self.is_cropped = is_cropped
+        self.threshold = threshold
         image_folder = Path(self.root, "images")
         self.img_names = [
             f for f in os.listdir(image_folder)
@@ -124,10 +128,10 @@ class COCOSingleStuffF1(data.Dataset):
             seg_path = Path(self.root, "targets", seg_name)
             seg = Image.open(seg_path)
             seg_array = np.array(seg)
-            fraction = (seg_array == 1).sum() / (
-                seg_array.shape[0] * seg_array.shape[1])
+            fraction = (seg_array == 1).sum() / (seg_array.shape[0] *
+                                                 seg_array.shape[1])
 
-            if fraction < self.THRESHOLD:
+            if fraction < self.threshold:
                 self.f1_classes.append(0)
             else:
                 self.f1_classes.append(1)
