@@ -1,5 +1,5 @@
 agent: COCOSingleStuffF1Trainer 
-dataset path: /mnt/hdd-4tb/testuser2/datasets/sky_clique
+dataset path: /home/abhay/data/filtered_datasets/sky_clique
 learning rate: 0.01
 batch size: 7
 n_outer: 40
