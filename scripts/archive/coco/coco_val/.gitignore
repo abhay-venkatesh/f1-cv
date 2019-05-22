@@ -1,3 +1,4 @@
 coco_stuff_deep_lab_val_*/outputs
 coco_val_.json
 coco_val.json
+panoptic_stuff_vals.json

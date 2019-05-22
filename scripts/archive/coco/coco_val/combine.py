@@ -6,9 +6,7 @@ def fix_map(coco_evals):
     coco_evals_ = []
     for coco_eval in coco_evals:
         coco_eval_ = coco_eval
-        if coco_eval["category_id"] == 0:
-            coco_eval_["category_id"] = 183
-        else:
+        if coco_eval["category_id"] != 0:
             coco_eval_["category_id"] += 91
         coco_evals_.append(coco_eval_)
     return coco_evals_
