@@ -76,6 +76,6 @@ class Colorer:
 if __name__ == "__main__":
     colorer = Colorer()
     used_colors, available_colors = colorer.color_gt(
-        Path("000000372307_gt.png"))
+        Path("000000359781_gt.png"))
     colorer.color_output(
-        Path("000000372307.png"), used_colors, available_colors)
+        Path("000000359781.png"), used_colors, available_colors)
