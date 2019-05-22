@@ -23,6 +23,12 @@ def fix_map(coco_evals):
     return panoptic_stuff_vals
 
 
+def resize(panoptic_stuff_vals):
+    raise NotImplementedError
+    with open(Path("panoptic_val2017.json")) as f:
+        panoptic_val = json.load(f)
+
+
 if __name__ == "__main__":
     coco_evals = []
     for i in range(0, 5):
@@ -32,5 +38,7 @@ if __name__ == "__main__":
             coco_evals.extend(json.load(f))
 
     panoptic_stuff_vals = fix_map(coco_evals)
+    panoptic_stuff_vals = resize(panoptic_stuff_vals)
+
     with open("panoptic_stuff_vals.json", "w+") as f:
         json.dump(panoptic_stuff_vals, f)
