@@ -2,10 +2,57 @@ from pathlib import Path
 from PIL import Image
 import numpy as np
 
+COLORS = [(217, 58, 70), (233, 142, 149), (250, 230, 231), (233, 242, 245),
+          (147, 184, 195), (63, 127, 147)]
+
+
+def color_gt(img_file_path):
+    gt = np.array(Image.open(img_file_path))
+    for i in np.unique(gt):
+        if i < 92:
+            gt[gt == i] = 0
+
+    red_layer = np.zeros(gt.shape)
+    blue_layer = np.zeros(gt.shape)
+    green_layer = np.zeros(gt.shape)
+    available_colors = COLORS
+    used_colors = {}
+    for i in np.unique(gt):
+        if i == 0 or i == 104 or i == 255:
+            continue
+        r, g, b = available_colors.pop()
+        red_layer[gt == i] = r
+        green_layer[gt == i] = g
+        blue_layer[gt == i] = b
+        used_colors[i] = (r, g, b)
+    gt_colored = np.dstack([red_layer, green_layer, blue_layer])
+    Image.fromarray(np.uint8(gt_colored)).save("000000053626_gt_colored.png")
+    return used_colors, available_colors
+
+
+def color_output(img_file_path, used_colors, available_colors):
+    output = np.array(Image.open(img_file_path))
+    output += 91
+    output[output == 91] = 0
+
+    red_layer = np.zeros(output.shape)
+    blue_layer = np.zeros(output.shape)
+    green_layer = np.zeros(output.shape)
+
+    for i in np.unique(output):
+        if i == 0:
+            continue
+        if i in used_colors.keys():
+            r, g, b = used_colors[i]
+        else:
+            r, g, b = available_colors.pop()
+        red_layer[output == i] = r
+        green_layer[output == i] = g
+        blue_layer[output == i] = b
+    output_colored = np.dstack([red_layer, green_layer, blue_layer])
+    Image.fromarray(np.uint8(output_colored)).save("000000053626_colored.png")
+
+
 if __name__ == "__main__":
-    gt = np.array(Image.open(Path("000000053626_gt.png")))
-    print(np.unique(gt))
-    raise RuntimeError
-    gt_colored = np.zeros((3, gt.shape[0], gt.shape[1]))
-    output = Image.open(Path("000000053626.png"))
-    output_colored = np.zeros((3, output.shape[0], output.shape[1]))
+    used_colors, available_colors = color_gt(Path("000000053626_gt.png"))
+    color_output(Path("000000053626.png"), used_colors, available_colors)
