@@ -9,5 +9,6 @@ conda env create -f environment.yml
 ## Run
 
 ```bash
+conda activate mwe
 python main.py
 ```

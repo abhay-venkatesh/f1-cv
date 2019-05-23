@@ -1,22 +1,13 @@
-import yaml
+from lib.configurator import Configurator
 from lib.logger import Logger
 from lib.mnistf1 import MNISTF1
 from pathlib import Path
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-import importlib
-import inflection
+from lib.ff_net_f1 import FFNetF1
 import os
 import torch
 import torch.nn.functional as F
-
-
-def load_config():
-    with open("config.yml", 'r') as stream:
-        try:
-            return yaml.load(stream, Loader=yaml.SafeLoader)
-        except yaml.YAMLError as exc:
-            print(exc)
 
 
 def lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
@@ -81,10 +72,7 @@ class MNISTF1Trainer:
         val_loader = DataLoader(valset, batch_size=self.config["batch size"])
 
         # Model
-        model_module = importlib.import_module(("lib.models.{}").format(
-            inflection.underscore(self.config["model"])))
-        Model = getattr(model_module, self.config["model"])
-        model = Model().to(self.device)
+        model = FFNetF1().to(self.device)
 
         # Load checkpoint if exists
         start_epochs = self._load_checkpoint(model)
@@ -244,5 +232,6 @@ class MNISTF1Trainer:
 
 
 if __name__ == "__main__":
-    config = load_config()
+    config = Configurator.configure(Path("mnist.yml"))
     trainer = MNISTF1Trainer(config)
+    trainer.run()

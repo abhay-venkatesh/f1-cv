@@ -1,5 +1,5 @@
 agent: MNISTF1Trainer
-dataset path: /home/abhay/data/mnistf1
+dataset path: ./
 learning rate: 0.01
 batch size: 100
 n_outer: 40
