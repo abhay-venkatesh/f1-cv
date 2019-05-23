@@ -20,7 +20,7 @@ class Colorer:
         red_layer = np.zeros(gt.shape)
         blue_layer = np.zeros(gt.shape)
         green_layer = np.zeros(gt.shape)
-        available_colors = self.colors
+        available_colors = self.colors.copy()
         used_colors = {}
         for i in np.unique(gt):
             if i != 0:

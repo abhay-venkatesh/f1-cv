@@ -44,7 +44,7 @@ class COCOSingleStuffF1Validator(Agent):
                 colored_output.save(
                     Path(self.config["outputs folder"], colored_output_name))
 
-                img = transforms.ToPILImage()(img[i, :, :].cpu())
-                img.save(
+                img_ = transforms.ToPILImage()(img[i, :, :].cpu())
+                img_.save(
                     Path(self.config["outputs folder"],
                          valset.img_names[index[i]]))
