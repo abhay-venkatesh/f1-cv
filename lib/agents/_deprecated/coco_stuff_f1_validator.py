@@ -15,7 +15,7 @@ import slidingwindow
 import torch
 
 
-class COCOStuffValidator(Agent):
+class COCOStuffF1Validator(Agent):
     N_CLASSES = 92
     WINDOW_SIZE = 320
     WINDOW_OVERLAP_PERCENT = 0.50
@@ -49,10 +49,6 @@ class COCOStuffValidator(Agent):
         with torch.no_grad():
             for i in tqdm(range(eval_start, eval_end)):
                 img, img_name = valset[i]
-
-                # TODO: Remove this
-                if img_name not in ["000000053626.jpg", "000000359781.jpg"]:
-                    continue
 
                 seg_name = img_name.replace(".jpg", ".png")
                 if seg_name in output_names:
