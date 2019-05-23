@@ -13,7 +13,7 @@ class Colorer:
         self.colors = self._set_colors()
 
     def _set_colors(self):
-        palette = sns.diverging_palette(220,10, sep=20, n=11)
+        palette = sns.diverging_palette(220, 10, sep=20, n=11)
         sns.palplot(palette)
         plt.savefig("colors.png")
         plt.close()
@@ -75,5 +75,4 @@ class Colorer:
 
 if __name__ == "__main__":
     colorer = Colorer()
-    used_colors, available_colors = colorer.color_gt(
-        Path("big-mask.png"))
+    used_colors, available_colors = colorer.color_gt(Path("big-mask.png"))

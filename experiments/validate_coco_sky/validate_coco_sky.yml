@@ -1,0 +1,4 @@
+agent: COCOSingleStuffF1Validator
+dataset path: D:\code\data\filtered_datasets\sky
+threshold: 0.6
+batch size: 5
