@@ -2,18 +2,29 @@ from PIL import Image
 from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
+import os
 import seaborn as sns
-
-COLORS = [(217, 58, 70), (233, 142, 149), (250, 230, 231), (242, 242, 242),
-          (233, 242, 245), (147, 184, 195), (63, 127, 147)]
+import shutil
 
 
 class Colorer:
+    MIN_COLOR = 10
+    MAX_COLOR = 220
+    N_CLASSES = 7
+    NO_CLASS = 0
+    N_CLASSES = 92
+    LAST_CLASS_LABEL = N_CLASSES - 1
+    MAX_PIXEL_VAL = 255
+
     def __init__(self):
         self.colors = self._set_colors()
 
     def _set_colors(self):
-        palette = sns.diverging_palette(10, 220, sep=50, n=7)
+        palette = sns.diverging_palette(
+            self.MIN_COLOR,
+            self.MAX_COLOR,
+            sep=round(self.MAX_COLOR / self.N_CLASSES),
+            n=self.N_CLASSES)
         sns.palplot(palette)
         plt.savefig("colors.png")
         plt.close()
@@ -21,14 +32,16 @@ class Colorer:
         colors = []
         for color in palette:
             r, g, b, _ = color
-            colors.append((int(r * 255), int(g * 255), int(b * 255)))
+            colors.append((int(r * self.MAX_PIXEL_VAL),
+                           int(g * self.MAX_PIXEL_VAL),
+                           int(b * self.MAX_PIXEL_VAL)))
         return colors
 
     def color_gt(self, img_file_path):
         gt = np.array(Image.open(img_file_path))
         for i in np.unique(gt):
-            if i < 92:
-                gt[gt == i] = 0
+            if i < self.N_CLASSES:
+                gt[gt == i] = self.NO_CLASS
 
         red_layer = np.zeros(gt.shape)
         blue_layer = np.zeros(gt.shape)
@@ -36,7 +49,7 @@ class Colorer:
         available_colors = self.colors
         used_colors = {}
         for i in np.unique(gt):
-            if i == 0 or i == 104 or i == 255:
+            if i == self.NO_CLASS or i == self.MAX_PIXEL_VAL:
                 pass
             else:
                 r, g, b = available_colors.pop()
@@ -51,15 +64,15 @@ class Colorer:
 
     def color_output(self, img_file_path, used_colors, available_colors):
         output = np.array(Image.open(img_file_path))
-        output += 91
-        output[output == 91] = 0
+        output += self.LAST_CLASS_LABEL
+        output[output == self.LAST_CLASS_LABEL] = self.NO_CLASS
 
         red_layer = np.zeros(output.shape)
         blue_layer = np.zeros(output.shape)
         green_layer = np.zeros(output.shape)
 
         for i in np.unique(output):
-            if i == 0:
+            if i == self.NO_CLASS:
                 continue
             if i in used_colors.keys():
                 r, g, b = used_colors[i]
@@ -75,11 +88,26 @@ class Colorer:
         return used_colors, available_colors
 
 
+def color():
+    output_names = [
+        f for f in os.listdir(Path("outputs"))
+        if os.path.isfile(Path("outputs", f))
+    ]
+    for output_name in output_names:
+        colorer = Colorer()
+        used_colors, available_colors = colorer.color_gt(
+            Path(output_name.replace(".png", "") + "_gt.png"))
+        used_colors, available_colors = colorer.color_output(
+            Path("outputs", output_name), used_colors, available_colors)
+        colorer.color_output(
+            Path("baselines",
+                 output_name.replace(".png", "") + "_baseline.png"))
+
+        img_folder = Path("D:/code/data/cocostuff/dataset/images/val2017")
+        shutil.copy2(
+            Path(img_folder, output_name.replace(".png", ".jpg")),
+            Path("images"))
+
+
 if __name__ == "__main__":
-    colorer = Colorer()
-    used_colors, available_colors = colorer.color_gt(
-        Path("000000359781_gt.png"))
-    used_colors, available_colors = colorer.color_output(
-        Path("000000359781.png"), used_colors, available_colors)
-    colorer.color_output(
-        Path("000000359781_baseline.png"), used_colors, available_colors)
+    color()

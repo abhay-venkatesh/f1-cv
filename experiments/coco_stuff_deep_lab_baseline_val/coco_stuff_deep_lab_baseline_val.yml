@@ -2,7 +2,7 @@ agent: COCOStuffValidator
 dataset path: D:\code\data\cocostuff\dataset\images\val2017
 model: deep_lab
 checkpoint path: D:\code\src\f1-cv\experiments\archive\coco_stuff\coco_stuff_full\coco_stuff_deep_lab_clique\checkpoints\30.ckpt
-
+target image folder: D:\code\src\f1-cv\scripts\archive\coco\triplets\outputs
 
 # Divide the evaluation set into 1 piece
 eval split divisor: 1

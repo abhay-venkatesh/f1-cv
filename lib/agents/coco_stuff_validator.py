@@ -37,6 +37,12 @@ class COCOStuffValidator(Agent):
             if os.path.isfile(Path(self.config["outputs folder"], f))
         ]
 
+        target_names_ = [
+            f for f in os.listdir(self.config["target image folder"])
+            if os.path.isfile(Path(self.config["target image folder"], f))
+        ]
+        target_names = [f.replace(".png", ".jpg") for f in target_names_]
+
         model.eval()
         coco_result = []
         eval_start = round(self.config["split number"] *
@@ -48,7 +54,7 @@ class COCOStuffValidator(Agent):
                 img, img_name = valset[i]
 
                 # TODO: Remove this
-                if img_name not in ["000000053626.jpg", "000000359781.jpg"]:
+                if img_name not in target_names:
                     continue
 
                 seg_name = img_name.replace(".jpg", ".png")
