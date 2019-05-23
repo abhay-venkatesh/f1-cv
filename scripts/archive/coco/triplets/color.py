@@ -5,6 +5,7 @@ import numpy as np
 import os
 import seaborn as sns
 import shutil
+from tqdm import tqdm
 
 
 class Colorer:
@@ -58,11 +59,14 @@ class Colorer:
                 blue_layer[gt == i] = b
                 used_colors[i] = (r, g, b)
         gt_colored = np.dstack([red_layer, green_layer, blue_layer])
-        Image.fromarray(
-            np.uint8(gt_colored)).save(img_file_path.stem + "_colored.png")
+
+        Image.fromarray(np.uint8(gt_colored)).save(
+            Path("gt_colored", img_file_path.stem + "_colored.png"))
+
         return used_colors, available_colors
 
-    def color_output(self, img_file_path, used_colors, available_colors):
+    def color_output(self, img_file_path, used_colors, available_colors,
+                     output_folder):
         output = np.array(Image.open(img_file_path))
         output += self.LAST_CLASS_LABEL
         output[output == self.LAST_CLASS_LABEL] = self.NO_CLASS
@@ -83,8 +87,10 @@ class Colorer:
             green_layer[output == i] = g
             blue_layer[output == i] = b
         output_colored = np.dstack([red_layer, green_layer, blue_layer])
-        Image.fromarray(
-            np.uint8(output_colored)).save(img_file_path.stem + "_colored.png")
+
+        Image.fromarray(np.uint8(output_colored)).save(
+            Path(output_folder, img_file_path.stem + "_colored.png"))
+
         return used_colors, available_colors
 
 
@@ -93,15 +99,17 @@ def color():
         f for f in os.listdir(Path("outputs"))
         if os.path.isfile(Path("outputs", f))
     ]
-    for output_name in output_names:
+    for output_name in tqdm(output_names):
         colorer = Colorer()
+        gt_folder = Path("D:/code/data/cocostuff/dataset/annotations/val2017")
         used_colors, available_colors = colorer.color_gt(
-            Path(output_name.replace(".png", "") + "_gt.png"))
+            Path(gt_folder, output_name))
         used_colors, available_colors = colorer.color_output(
-            Path("outputs", output_name), used_colors, available_colors)
+            Path("outputs", output_name), used_colors, available_colors,
+            Path("outputs_colored"))
         colorer.color_output(
-            Path("baselines",
-                 output_name.replace(".png", "") + "_baseline.png"))
+            Path("baselines", output_name), used_colors, available_colors,
+            Path("baselines_colored"))
 
         img_folder = Path("D:/code/data/cocostuff/dataset/images/val2017")
         shutil.copy2(
