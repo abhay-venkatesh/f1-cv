@@ -1,6 +1,6 @@
 from lib.agents.agent import Agent
+from lib.utils.cocostuffapi.cocostuffeval import COCOStuffeval
 from pycocotools.coco import COCO
-from lib.utils.cocostuffapi.cocostuffeval import COCOStuffEval
 
 
 class COCOStuffOfficialEvaluator(Agent):
