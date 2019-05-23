@@ -50,6 +50,10 @@ class COCOStuffValidator(Agent):
             for i in tqdm(range(eval_start, eval_end)):
                 img, img_name = valset[i]
 
+                # TODO: Remove this
+                if img_name not in []:
+                    continue
+
                 seg_name = img_name.replace(".jpg", ".png")
                 if seg_name in output_names:
                     seg_img = Image.open(
