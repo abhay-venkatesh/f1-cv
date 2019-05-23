@@ -82,4 +82,4 @@ if __name__ == "__main__":
     used_colors, available_colors = colorer.color_output(
         Path("000000359781.png"), used_colors, available_colors)
     colorer.color_output(
-        Path("000000053626_baseline.png"), used_colors, available_colors)
+        Path("000000359781_baseline.png"), used_colors, available_colors)
