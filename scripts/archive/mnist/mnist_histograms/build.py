@@ -6,7 +6,7 @@ import pickle
 import seaborn as sns
 
 PALETTE = sns.diverging_palette(220, 10, n=7)
-FONT_SCALE = 2
+FONT_SCALE = 4
 STYLE = "ticks"
 CONTEXT = "paper"
 
