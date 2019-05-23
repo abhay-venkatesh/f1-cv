@@ -13,7 +13,7 @@ class Colorer:
         self.colors = self._set_colors()
 
     def _set_colors(self):
-        palette = sns.diverging_palette(10, 220, sep=20, n=11)
+        palette = sns.diverging_palette(10, 220, sep=50, n=7)
         sns.palplot(palette)
         plt.savefig("colors.png")
         plt.close()
