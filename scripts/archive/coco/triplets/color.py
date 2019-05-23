@@ -11,7 +11,7 @@ from tqdm import tqdm
 class Colorer:
     MIN_COLOR = 10
     MAX_COLOR = 220
-    N_CLASSES = 7
+    N_COLORS = 23
     NO_CLASS = 0
     N_CLASSES = 92
     LAST_CLASS_LABEL = N_CLASSES - 1
@@ -24,8 +24,8 @@ class Colorer:
         palette = sns.diverging_palette(
             self.MIN_COLOR,
             self.MAX_COLOR,
-            sep=round(self.MAX_COLOR / self.N_CLASSES),
-            n=self.N_CLASSES)
+            sep=round((self.MAX_COLOR - self.MIN_COLOR) / self.N_COLORS),
+            n=self.N_COLORS)
         sns.palplot(palette)
         plt.savefig("colors.png")
         plt.close()
@@ -47,7 +47,7 @@ class Colorer:
         red_layer = np.zeros(gt.shape)
         blue_layer = np.zeros(gt.shape)
         green_layer = np.zeros(gt.shape)
-        available_colors = self.colors
+        available_colors = self.colors.copy()
         used_colors = {}
         for i in np.unique(gt):
             if i == self.NO_CLASS or i == self.MAX_PIXEL_VAL:
