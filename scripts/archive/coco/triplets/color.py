@@ -65,17 +65,21 @@ class Colorer:
                 r, g, b = used_colors[i]
             else:
                 r, g, b = available_colors.pop()
+                used_colors[i] = (r, g, b)
             red_layer[output == i] = r
             green_layer[output == i] = g
             blue_layer[output == i] = b
         output_colored = np.dstack([red_layer, green_layer, blue_layer])
         Image.fromarray(
             np.uint8(output_colored)).save(img_file_path.stem + "_colored.png")
+        return used_colors, available_colors
 
 
 if __name__ == "__main__":
     colorer = Colorer()
     used_colors, available_colors = colorer.color_gt(
         Path("000000359781_gt.png"))
-    colorer.color_output(
+    used_colors, available_colors = colorer.color_output(
         Path("000000359781.png"), used_colors, available_colors)
+    colorer.color_output(
+        Path("000000053626_baseline.png"), used_colors, available_colors)

@@ -27,10 +27,7 @@ class COCOStuffValidator(Agent):
             ("lib.models.{}".format(self.config["model"])))
         net = getattr(net_module, "build_" + self.config["model"])
 
-        model = net(
-            n_classes=self.N_CLASSES,
-            size=(self.config["img width"],
-                  self.config["img height"])).to(self.device)
+        model = net(n_classes=self.N_CLASSES).to(self.device)
         model = nn.DataParallel(model)
         model.load_state_dict(torch.load(Path(self.config["checkpoint path"])))
 
@@ -71,7 +68,7 @@ class COCOStuffValidator(Agent):
                     img_windows, windows = self._get_img_windows(img_)
 
                     X = torch.stack(img_windows).to(self.device)
-                    Y_, _ = model(X)
+                    Y_ = model(X)
                     _, predicted = torch.max(Y_.data, 1)
 
                     seg_array = self._get_seg_array(predicted, windows, img_)
