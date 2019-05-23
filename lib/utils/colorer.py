@@ -1,5 +1,4 @@
 from PIL import Image
-import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
@@ -10,9 +9,6 @@ class Colorer:
 
     def _set_colors(self):
         palette = sns.diverging_palette(220, 10, sep=20, n=11)
-        sns.palplot(palette)
-        plt.savefig("colors.png")
-        plt.close()
 
         colors = []
         for color in palette:
@@ -20,7 +16,7 @@ class Colorer:
             colors.append((int(r * 255), int(g * 255), int(b * 255)))
         return colors
 
-    def color_gt(self, gt):
+    def color(self, gt):
         red_layer = np.zeros(gt.shape)
         blue_layer = np.zeros(gt.shape)
         green_layer = np.zeros(gt.shape)
@@ -34,7 +30,8 @@ class Colorer:
                 blue_layer[gt == i] = b
                 used_colors[i] = (r, g, b)
         gt_colored = np.dstack([red_layer, green_layer, blue_layer])
-        return Image.fromarray(np.uint8(gt_colored))
+        return Image.fromarray(np.uint8(gt_colored)), used_colors, \
+            available_colors
 
     def color_output(self, output, used_colors, available_colors):
         red_layer = np.zeros(output.shape)

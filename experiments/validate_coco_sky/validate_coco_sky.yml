@@ -1,4 +1,5 @@
 agent: COCOSingleStuffF1Validator
 dataset path: D:\code\data\filtered_datasets\sky
+checkpoint path: D:\code\src\f1-cv\experiments\archive\coco_stuff\coco_stuff_sky\coco_stuff_confidences\beta_00001_thresh_06\checkpoints\46.ckpt
 threshold: 0.6
 batch size: 5
