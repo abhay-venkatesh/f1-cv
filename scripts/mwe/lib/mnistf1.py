@@ -9,6 +9,10 @@ import torch
 
 
 class MNISTF1(MNIST):
+    SIZE = 64
+    SMALL_START = 18
+    SMALL_END = 46
+
     def __init__(self,
                  root,
                  train=True,
@@ -45,15 +49,22 @@ class MNISTF1(MNIST):
         for [img, target] in tqdm(zip(self.data, self.targets)):
             img = img.numpy()
 
-            small = np.zeros([64, 64])
-            small[18:46, 18:46] += img
+            # We create "small" and
+            small = np.zeros([self.SIZE, self.SIZE])
+            small[self.SMALL_START:self.SMALL_END, self.SMALL_START:self.
+                  SMALL_END] += img
             data_.append(small)
             targets_.append((target, 0))
 
-            big = cv2.resize(
-                img, dsize=(64, 64), interpolation=cv2.INTER_CUBIC)
+            # "big" versions of each image in the MNIST dataset
+            big = cv2.resize(img,
+                             dsize=(self.SIZE, self.SIZE),
+                             interpolation=cv2.INTER_CUBIC)
+
             data_.append(big)
             targets_.append((target, 1))
+
+            # We count the number of positive examples for use in our algorithm
             self.num_positives += 1
 
         self.data = data_

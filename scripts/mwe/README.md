@@ -12,3 +12,5 @@ conda env create -f environment.yml
 conda activate mwe
 python main.py
 ```
+
+See the mnist.yml file for hyper-parameter details.

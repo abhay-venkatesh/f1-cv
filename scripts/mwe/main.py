@@ -11,6 +11,7 @@ import torch.nn.functional as F
 
 
 def lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
+    """ Computes the F1-term """
     # Reshape
     y1 = y1.float()
     y1_ = y1_.squeeze()
