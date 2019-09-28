@@ -41,3 +41,5 @@ dataset path: /home/ubuntu/data/filtered_datasets/full_stuff_amazon
 ```
 This experiment uses the `COCOStuffF1Trainer` in file `coco_stuff_f1_trainer.py` with the `full_stuff_amazon` dataset.
 You can generate the dataset from https://github.com/abhay-venkatesh/coco-stuff-tools.
+
+You can directly use the `coco_stuff_f1_deep_lab_amazon.yml` file as an argument into `main.py` to replicate.
