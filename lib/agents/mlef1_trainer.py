@@ -178,3 +178,44 @@ class MLEF1Trainer(Agent):
                     gamma.data += gamma_cache.reshape((len(X_train)))
 
             models[c] = model
+
+        preds = np.zeros(Y_test.shape)
+        probs = np.zeros(Y_test.shape)
+        for c in range(N_CLASSES):
+            model = models[c]
+            model.eval()
+
+            # One vs Rest Transformation
+            # (100, 20) -> (100,)
+            Y_test_c = Y_test[:, c]
+
+            with torch.no_grad():
+                pred_layer = np.zeros(Y_test_c.shape)
+                prob_layer = np.zeros(Y_test_c.shape)
+                for i, (X, Y) in enumerate(zip(X_test, Y_test_c)):
+                    X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
+                    Y_, _ = model(X)
+                    Y_ = Y_.reshape((1, -1))
+                    _, predicted = torch.max(Y_.data, 1)
+                    pred_layer[i] = predicted
+                    prob_layer[i] = torch.nn.Softmax(dim=1)(Y_)[0][1]
+
+            preds[:, c] = pred_layer
+            probs[:, c] = prob_layer
+
+        # Simple prediction
+        scores = list()
+        for x, y in zip(preds, Y_test):
+            scores.append(f1_score(x, y))
+        score_simple = np.mean(scores)
+        print("Simple score:", score_simple)
+
+        # Optimized prediction
+        scores = list()
+        for x, y in zip(probs, Y_test):
+            pred = np.zeros(N_CLASSES)
+            pred_idxs = optimal_basket(x)
+            pred[pred_idxs] = 1
+            scores.append(f1_score(pred, y))
+        score_optimized = np.mean(scores)
+        print("Optimized score:", score_optimized)
