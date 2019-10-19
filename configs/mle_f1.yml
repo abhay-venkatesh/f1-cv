@@ -1,0 +1,20 @@
+agent: MLEF1Trainer
+epochs: 32
+learning rate: 0.001
+model: LogisticRegressionF1
+
+n_outer: 40
+n_inner: 600
+
+# Normalization coefficient
+beta: 0.001
+
+# Primal update parameter
+eta_tau: 0.01
+eta_eps: 0.01
+eta_w: 0.01
+
+# Dual update parameters
+eta_gamma: 0.001
+eta_lamb: 0.001
+eta_mu: 0.00001
