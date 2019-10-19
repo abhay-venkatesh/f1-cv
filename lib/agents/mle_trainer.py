@@ -1,12 +1,15 @@
 from lib.agents.agent import Agent  # noqa E901
+from lib.utils.logger import Logger
+from mle import optimal_basket
+from pathlib import Path
 from sklearn.datasets import make_multilabel_classification
 from tqdm import tqdm
 import importlib
 import inflection
+import numpy as np
 import torch
 import torch.nn.functional as F
-from lib.utils.logger import Logger
-from pathlib import Path
+from sklearn.metrics import f1_score
 
 
 class MLETrainer(Agent):
@@ -29,21 +32,14 @@ class MLETrainer(Agent):
         Y_train, Y_test = Y[:N_TRAIN], Y[N_TRAIN:]
 
         # We train one model per class
-        # models = {}
+        models = {}
 
-        for c in range(N_CLASSES):
+        for c in tqdm(range(N_CLASSES)):
             self.logger = Logger(Path(self.config["stats folder"], "class_" + str(c)))
 
-            ############################
             # One vs Rest Transformation
-            # (100, 20) -> (1, 2000)
-            X_train_c, X_test_c = X_train.reshape(-1, 2000), X_test.reshape(-1, 2000)
-            Y_train_c_i = Y_train[c]  # shape = (1, 1)
-            Y_train_c = torch.zeros((2, 1))  # [0, 0]
-            Y_train_c[Y_train_c_i] = 1  # either [1, 0] or [0, 1]
-            Y_test_c_i = Y_test[c]  # shape = (1, 1)
-            Y_test_c = torch.zeros((2, 1))  # [0, 0]
-            Y_test_c[Y_test_c_i] = 1  # either [1, 0] or [0, 1]
+            # (100, 20) -> (100,)
+            Y_train_c = Y_train[:, c]
 
             # Model and optimizer
             model_module = importlib.import_module(
@@ -59,18 +55,15 @@ class MLETrainer(Agent):
             start_epochs = self._load_checkpoint(model)
 
             # Dataset
-            for epoch in tqdm(range(start_epochs, self.config["epochs"])):
+            for epoch in range(start_epochs, self.config["epochs"]):
                 total_loss = 0
                 model.train()
-                for X, Y in tqdm(zip(X_train_c, Y_train_c)):
+                for X, Y in zip(X_train, Y_train_c):
 
                     # Forward computation
-                    print(Y)
-                    Y = (Y == 1).nonzero()
-                    X, Y = X.to(self.device), Y.to(self.device)
-                    Y_ = model(X)
-                    print(Y_)
-                    print(Y)
+                    X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
+                    # X, Y = X.to(self.device), Y.to(self.device)
+                    Y_ = model(X).reshape((1, -1))
                     loss = F.cross_entropy(Y_, Y)
                     total_loss += loss.item()
 
@@ -79,26 +72,73 @@ class MLETrainer(Agent):
                     optimizer.step()
                     optimizer.zero_grad()
 
-                # Log loss
-                avg_loss = total_loss / len(X_train)
-                self.logger.log("epoch", epoch, "loss", avg_loss)
+            models[c] = model
 
-                # Validate
-                model.eval()
-                total = 0
-                correct = 0
-                with torch.no_grad():
-                    for X, Y in zip(X_test_c, Y_test_c):
-                        X, Y = X.to(self.device), Y.to(self.device)
-                        Y_ = model(X)
-                        _, predicted = torch.max(Y_.data, 1)
-                        total += Y.size(0)
-                        correct += (predicted == Y).sum().item()
-                accuracy = 100.0 * correct / total
-                self.logger.log("epoch", epoch, "accuracy", accuracy)
+        preds = np.zeros(Y_test.shape)
+        probs = np.zeros(Y_test.shape)
+        for c in range(N_CLASSES):
+            model = models[c]
+            model.eval()
 
-                # Graph
-                self.logger.graph()
+            # One vs Rest Transformation
+            # (100, 20) -> (100,)
+            Y_test_c = Y_test[:, c]
 
-                # Checkpoint
-                # self._save_checkpoint(epoch, model)
+            with torch.no_grad():
+                pred_layer = np.zeros(Y_test_c.shape)
+                for i, (X, Y) in enumerate(zip(X_test, Y_test_c)):
+                    X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
+                    Y_ = model(X).reshape((1, -1))
+                    _, predicted = torch.max(Y_.data, 1)
+                    pred_layer[i] = predicted
+
+            preds[:, c] = pred_layer
+
+        print(preds)
+
+        # Simple prediction
+        scores = list()
+        for x, y in zip(preds, Y_test):
+            scores.append(f1_score(x, y))
+        score_simple = np.mean(scores)
+        print("Simple score:", score_simple)
+
+        # Optimized prediction
+        """
+        probs = clf.predict_proba(X_test)
+        scores = list()
+        for x, y in zip(probs, Y_test):
+            pred = np.zeros(N_CLASSES)
+            pred_idxs = optimal_basket(x)
+            pred[pred_idxs] = 1
+            scores.append(f1_score(pred, y))
+        score_optimized = np.mean(scores)
+        print("Optimized score:", score_optimized)
+        """
+
+        """
+        # Log loss
+        avg_loss = total_loss / len(X_train)
+        self.logger.log("epoch", epoch, "loss", avg_loss)
+
+        # Validate
+        model.eval()
+        total = 0
+        correct = 0
+        with torch.no_grad():
+            for X, Y in zip(X_test, Y_test_c):
+                # X, Y = X.to(self.device), Y.to(self.device)
+                X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
+                Y_ = model(X).reshape((1, -1))
+                _, predicted = torch.max(Y_.data, 1)
+                total += Y.size(0)
+                correct += (predicted == Y).sum().item()
+        accuracy = 100.0 * correct / total
+        self.logger.log("epoch", epoch, "accuracy", accuracy)
+
+        # Graph
+        self.logger.graph()
+
+        # Checkpoint
+        # self._save_checkpoint(epoch, model)
+        """
