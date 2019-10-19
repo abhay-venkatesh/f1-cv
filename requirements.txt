@@ -1,0 +1,9 @@
+pyaml
+inflection
+tqdm
+torch
+torchvision
+scikit-image
+opencv-python
+cython
+matplotlib
