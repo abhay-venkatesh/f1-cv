@@ -86,15 +86,16 @@ class MLETrainer(Agent):
 
             with torch.no_grad():
                 pred_layer = np.zeros(Y_test_c.shape)
+                prob_layer = np.zeros(Y_test_c.shape)
                 for i, (X, Y) in enumerate(zip(X_test, Y_test_c)):
                     X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
                     Y_ = model(X).reshape((1, -1))
                     _, predicted = torch.max(Y_.data, 1)
                     pred_layer[i] = predicted
+                    prob_layer[i] = torch.nn.Softmax(dim=1)(Y_)[0][1]
 
             preds[:, c] = pred_layer
-
-        print(preds)
+            probs[:, c] = prob_layer
 
         # Simple prediction
         scores = list()
@@ -104,8 +105,6 @@ class MLETrainer(Agent):
         print("Simple score:", score_simple)
 
         # Optimized prediction
-        """
-        probs = clf.predict_proba(X_test)
         scores = list()
         for x, y in zip(probs, Y_test):
             pred = np.zeros(N_CLASSES)
@@ -114,7 +113,6 @@ class MLETrainer(Agent):
             scores.append(f1_score(pred, y))
         score_optimized = np.mean(scores)
         print("Optimized score:", score_optimized)
-        """
 
         """
         # Log loss
