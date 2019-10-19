@@ -3,3 +3,4 @@ checkpoints
 pretrained
 .DS_Store
 .vscode
+*.swp
