@@ -15,9 +15,6 @@ from lib.utils.functional import lagrange
 
 class MLEF1Trainer(Agent):
     def run(self):
-        # Use CPU for simplicity
-        self.device = torch.device("cpu")
-
         #################
         # Prepare dataset
         N_CLASSES = 20
@@ -56,16 +53,16 @@ class MLEF1Trainer(Agent):
             num_positives = Y_train_c.sum()
 
             # Primal variables
-            tau = torch.rand(len(X_train), device=self.device, requires_grad=True)
-            eps = torch.rand(1, device=self.device, requires_grad=True)
-            w = torch.rand(1, device=self.device, requires_grad=True)
+            tau = torch.rand(len(X_train), requires_grad=True)
+            eps = torch.rand(1, requires_grad=True)
+            w = torch.rand(1, requires_grad=True)
 
             # Dual variables
-            lamb = torch.zeros(len(X_train), device=self.device)
+            lamb = torch.zeros(len(X_train))
             lamb.fill_(0.001)
-            mu = torch.zeros(1, device=self.device)
+            mu = torch.zeros(1)
             mu.fill_(0.001)
-            gamma = torch.zeros(len(X_train), device=self.device)
+            gamma = torch.zeros(len(X_train))
             gamma.fill_(0.001)
 
             # Primal Optimization
@@ -107,7 +104,8 @@ class MLEF1Trainer(Agent):
                     # Forward computation
                     X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
                     y0_, y1_ = model(X)
-                    y0_, y1_ = y0_.reshape((1, -1)), y1_.reshape((1, -1))
+                    y1_ = y1_
+                    y0_ = y0_.reshape((1, -1))
                     y0 = Y
                     y1 = Y
 
@@ -129,9 +127,7 @@ class MLEF1Trainer(Agent):
                     optimizer.zero_grad()
 
                     # Project eps to ensure non-negativity
-                    eps.data = torch.max(
-                        torch.zeros(1, dtype=torch.float, device=self.device), eps.data
-                    )
+                    eps.data = torch.max(torch.zeros(1, dtype=torch.float), eps.data)
 
                     # Log and validate per epoch
                     i += 1
@@ -154,13 +150,13 @@ class MLEF1Trainer(Agent):
                 # Dual Updates
                 with torch.no_grad():
                     mu_cache = 0
-                    lamb_cache = torch.zeros_like(lamb)
-                    gamma_cache = torch.zeros_like(gamma)
+                    lamb_cache = torch.zeros_like(lamb).reshape((len(X_train), 1))
+                    gamma_cache = torch.zeros_like(gamma).reshape((len(X_train), 1))
                     for j, (X, Y) in enumerate(zip(X_train, Y_train_c)):
                         # Forward computation
                         X, Y = torch.from_numpy(X), torch.tensor(Y).reshape((1,))
                         _, y1_ = model(X)
-                        y1 = Y
+                        y1 = Y.reshape((1, -1))
 
                         # Cache for mu update
                         mu_cache += tau[j].sum()
@@ -169,16 +165,16 @@ class MLEF1Trainer(Agent):
                         y1 = y1.float()
                         y1_ = y1_.view(-1)
 
-                        lamb_cache[j] += self.config["eta_lamb"] * (
-                            y1 * (tau[j] - (w * y1_))
-                        )
+                        lamb_cache[j] += (
+                            self.config["eta_lamb"] * (y1 * (tau[j] - (w * y1_)))
+                        ).reshape((1))
                         gamma_cache[j] += self.config["eta_gamma"] * (
                             y1 * (tau[j] - eps)
-                        )
+                        ).reshape((1))
 
                     # Update data
                     mu.data += self.config["eta_mu"] * (mu_cache - 1)
-                    lamb.data += lamb_cache
-                    gamma.data += gamma_cache
+                    lamb.data += lamb_cache.reshape((len(X_train)))
+                    gamma.data += gamma_cache.reshape((len(X_train)))
 
             models[c] = model

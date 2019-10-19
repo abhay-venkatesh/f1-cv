@@ -159,6 +159,9 @@ class MNISTF1Trainer(Agent):
                     # Forward computation
                     X, Y = X.to(self.device), Y.to(self.device)
                     _, y1_ = model(X)
+                    print(y1_)
+                    print(y1_.shape)
+                    raise RuntimeError
                     y1 = Y[:, 1]
                     i = Y[:, 2]
 

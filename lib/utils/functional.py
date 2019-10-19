@@ -9,7 +9,8 @@ def cross_entropy2d(output, target, weight=None):
     # Handle inconsistent size between output and target
     if h != ht and w != wt:  # upsample labels
         output = F.interpolate(
-            output, size=(ht, wt), mode="bilinear", align_corners=True)
+            output, size=(ht, wt), mode="bilinear", align_corners=True
+        )
 
     output = output.transpose(1, 2).transpose(2, 3).contiguous().view(-1, c)
     target = target.view(-1)
@@ -24,15 +25,16 @@ def get_iou(outputs, labels):
     # But if you are passing output from UNet or something it will most
     # probably be with the BATCH x 1 x H x W shape
     outputs = outputs.squeeze(1)  # BATCH x 1 x H x W => BATCH x H x W
-    intersection = (outputs & labels).float().sum(
-        (1, 2))  # Will be zero if Truth=0 or Prediction=0
-    union = (outputs | labels).float().sum((1,
-                                            2))  # Will be zzero if both are 0
-    iou = (intersection + SMOOTH) / (union + SMOOTH
-                                     )  # We smooth our devision to avoid 0/0
-    thresholded = torch.clamp(
-        20 * (iou - 0.5), 0,
-        10).ceil() / 10  # This is equal to comparing with thresolds
+    intersection = (
+        (outputs & labels).float().sum((1, 2))
+    )  # Will be zero if Truth=0 or Prediction=0
+    union = (outputs | labels).float().sum((1, 2))  # Will be zzero if both are 0
+    iou = (intersection + SMOOTH) / (
+        union + SMOOTH
+    )  # We smooth our devision to avoid 0/0
+    thresholded = (
+        torch.clamp(20 * (iou - 0.5), 0, 10).ceil() / 10
+    )  # This is equal to comparing with thresolds
     return thresholded.mean()
 
 
@@ -42,10 +44,10 @@ def lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
     y1_ = y1_.squeeze()
 
     # Term that is not associated with either positive or negative examples
-    neutral = (num_pos * eps)
+    neutral = num_pos * eps
 
     # Negative example terms
-    neg = torch.max(torch.zeros_like(y1_), eps + (w * y1_))
+    neg = torch.max(torch.zeros_like(y1_), eps + (w.double() * y1_))
     neg = (abs(1 - y1) * neg).sum()
 
     # Positive example terms
@@ -62,7 +64,7 @@ def partial_lagrange(num_pos, y1_, y1, w, eps, tau, lamb, mu, gamma):
     y1_ = y1_.squeeze()
 
     # Term that is not associated with either positive or negative examples
-    neutral = (num_pos * eps)
+    neutral = num_pos * eps
 
     # Negative example terms
     neg = torch.max(torch.zeros_like(y1_), eps + (w * y1_))
@@ -85,10 +87,10 @@ def sorted_project(eps, tau):
             k = i
             break
         else:
-            new_eps = (((i * new_eps) + tau_sorted[i]) / (i + 1))
+            new_eps = ((i * new_eps) + tau_sorted[i]) / (i + 1)
     new_eps = torch.max(eps, torch.zeros_like(eps))
     new_tau = torch.full_like(tau_sorted, 0)
-    new_tau[:k - 1] = new_eps
+    new_tau[: k - 1] = new_eps
     new_tau[k:] = tau_sorted[k:]
     new_tau[indices] = new_tau
 
