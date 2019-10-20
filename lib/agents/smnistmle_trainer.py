@@ -86,6 +86,8 @@ class SMNISTMLETrainer(Agent):
                 accuracy = 100.0 * correct / total
                 self.logger.log("epoch", epoch, "accuracy", accuracy)
 
+                self.logger.graph()
+
             models[c] = model
 
         preds = np.zeros((len(val_loader.dataset), N_CLASSES))
