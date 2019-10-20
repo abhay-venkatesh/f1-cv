@@ -9,6 +9,7 @@ import torch.nn.functional as F
 from lib.models.mle_net import MLENet
 from lib.datasets.mnistf1 import MNISTF1
 from torch.utils.data import DataLoader
+import os
 
 
 class SMNISTMLETrainer(Agent):
@@ -89,6 +90,11 @@ class SMNISTMLETrainer(Agent):
                 self.logger.graph()
 
                 checkpoint_filename = str(epoch + 1) + ".ckpt"
+                checkpoint_folder = Path(
+                    self.config["checkpoints folder"], "class_" + str(c)
+                )
+                if not os.path.exists(checkpoint_folder):
+                    os.mkdir(checkpoint_folder)
                 checkpoint_path = Path(
                     self.config["checkpoints folder"],
                     "class_" + str(c),
