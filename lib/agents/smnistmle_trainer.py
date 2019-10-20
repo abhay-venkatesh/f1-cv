@@ -88,6 +88,14 @@ class SMNISTMLETrainer(Agent):
 
                 self.logger.graph()
 
+                checkpoint_filename = str(epoch + 1) + ".ckpt"
+                checkpoint_path = Path(
+                    self.config["checkpoints folder"],
+                    "class_" + str(c),
+                    checkpoint_filename,
+                )
+                torch.save(model.state_dict(), checkpoint_path)
+
             models[c] = model
 
         preds = np.zeros((len(val_loader.dataset), N_CLASSES))
