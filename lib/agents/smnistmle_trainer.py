@@ -62,7 +62,6 @@ class SMNISTMLETrainer(Agent):
                     loss.backward()
                     optimizer.step()
                     optimizer.zero_grad()
-                    break
 
             models[c] = model
             break
@@ -74,8 +73,6 @@ class SMNISTMLETrainer(Agent):
             model.eval()
 
             with torch.no_grad():
-                # pred_layer = np.zeros(preds[:, c].shape)
-                # prob_layer = np.zeros(probs[:, c].shape)
                 for i, (X, Y) in enumerate(val_loader):
                     X, Y = X.to(self.device), Y.to(self.device)
                     Y_ = model(X).reshape((1, -1))
@@ -85,18 +82,35 @@ class SMNISTMLETrainer(Agent):
             break
 
         # Simple prediction
-        scores = list()
-        for x, y, _ in zip(preds, val_loader):
-            scores.append(f1_score(x, y))
-        score_simple = np.mean(scores)
-        print("Simple score:", score_simple)
+        preds_iter = iter(preds)
+        correct = 0
+        total = 0
+        for _, y in val_loader:
+            gt = np.zeros((N_CLASSES))
+            gt[y[0][0]] = 1
+            pred = next(preds_iter)
+            if np.array_equal(gt, pred):
+                correct += 1
+            break
+        accuracy = 0.0
+        if total != 0:
+            accuracy = 100.0 * correct / total
+        print("Simple accuracy:", accuracy)
 
         # Optimized prediction
-        scores = list()
-        for x, y, _ in zip(probs, val_loader):
+        probs_iter = iter(probs)
+        for _, y in val_loader:
             pred = np.zeros(N_CLASSES)
+            x = next(probs_iter)
             pred_idxs = optimal_basket(x)
             pred[pred_idxs] = 1
-            scores.append(f1_score(pred, y))
-        score_optimized = np.mean(scores)
-        print("Optimized score:", score_optimized)
+
+            gt = np.zeros((N_CLASSES))
+            gt[y[0][0]] = 1
+            if np.array_equal(gt, pred):
+                correct += 1
+            break
+        accuracy = 0.0
+        if total != 0:
+            accuracy = 100.0 * correct / total
+        print("MLE:", accuracy)
