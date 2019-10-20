@@ -46,7 +46,6 @@ class SMNISTMLETrainer(Agent):
                 total_loss = 0
                 model.train()
 
-                breaker = 0
                 for X, Y in tqdm(train_loader):
 
                     # One vs. Rest Conversion
@@ -64,11 +63,6 @@ class SMNISTMLETrainer(Agent):
                     loss.backward()
                     optimizer.step()
                     optimizer.zero_grad()
-
-                    break
-                    breaker += 1
-                    if breaker == 1000:
-                        break
 
                 # Log loss
                 avg_loss = total_loss / len(train_loader)
@@ -108,8 +102,6 @@ class SMNISTMLETrainer(Agent):
                     checkpoint_filename,
                 )
                 torch.save(model.state_dict(), checkpoint_path)
-
-                break
 
             models[c] = model
 
