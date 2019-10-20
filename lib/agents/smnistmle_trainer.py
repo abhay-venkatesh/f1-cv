@@ -6,7 +6,6 @@ from tqdm import tqdm
 import numpy as np
 import torch
 import torch.nn.functional as F
-from sklearn.metrics import f1_score
 from lib.models.mle_net import MLENet
 from lib.datasets.mnistf1 import MNISTF1
 from torch.utils.data import DataLoader
@@ -63,8 +62,31 @@ class SMNISTMLETrainer(Agent):
                     optimizer.step()
                     optimizer.zero_grad()
 
+                # Log loss
+                avg_loss = total_loss / len(train_loader)
+                self.logger.log("epoch", epoch, "loss", avg_loss)
+
+                # Validate
+                model.eval()
+                total = 0
+                correct = 0
+                with torch.no_grad():
+                    for X, Y in val_loader:
+                        # One vs. Rest Conversion
+                        Y = Y[:, 0]
+                        Y[Y == c] = 1
+                        Y[Y != c] = 0
+
+                        # Forward computation
+                        X, Y = X.to(self.device), Y.to(self.device)
+                        Y_ = model(X)
+                        _, predicted = torch.max(Y_.data, 1)
+                        total += Y.size(0)
+                        correct += (predicted == Y).sum().item()
+                accuracy = 100.0 * correct / total
+                self.logger.log("epoch", epoch, "accuracy", accuracy)
+
             models[c] = model
-            break
 
         preds = np.zeros((len(val_loader.dataset), N_CLASSES))
         probs = np.zeros((len(val_loader.dataset), N_CLASSES))
@@ -79,7 +101,6 @@ class SMNISTMLETrainer(Agent):
                     _, predicted = torch.max(Y_.data, 1)
                     preds[:, c][i] = predicted
                     probs[:, c][i] = torch.nn.Softmax(dim=1)(Y_)[0][1]
-            break
 
         # Simple prediction
         preds_iter = iter(preds)
@@ -91,7 +112,6 @@ class SMNISTMLETrainer(Agent):
             pred = next(preds_iter)
             if np.array_equal(gt, pred):
                 correct += 1
-            break
         accuracy = 0.0
         if total != 0:
             accuracy = 100.0 * correct / total
@@ -109,7 +129,6 @@ class SMNISTMLETrainer(Agent):
             gt[y[0][0]] = 1
             if np.array_equal(gt, pred):
                 correct += 1
-            break
         accuracy = 0.0
         if total != 0:
             accuracy = 100.0 * correct / total
