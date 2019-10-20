@@ -114,6 +114,7 @@ class SMNISTMLETrainer(Agent):
             pred = next(preds_iter)
             if np.array_equal(gt, pred):
                 correct += 1
+            total += 1
         accuracy = 0.0
         if total != 0:
             accuracy = 100.0 * correct / total
@@ -121,6 +122,8 @@ class SMNISTMLETrainer(Agent):
 
         # Optimized prediction
         probs_iter = iter(probs)
+        correct = 0
+        total = 0
         for _, y in val_loader:
             pred = np.zeros(N_CLASSES)
             x = next(probs_iter)
@@ -131,6 +134,7 @@ class SMNISTMLETrainer(Agent):
             gt[y[0][0]] = 1
             if np.array_equal(gt, pred):
                 correct += 1
+            total += 1
         accuracy = 0.0
         if total != 0:
             accuracy = 100.0 * correct / total
