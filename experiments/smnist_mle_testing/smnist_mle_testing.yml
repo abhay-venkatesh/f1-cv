@@ -1,0 +1,6 @@
+agent: SMNISTMLETrainer
+epochs: 2
+learning rate: 0.01
+model: MLENet
+dataset path: /home/abhay/code/data/mnistf1
+batch_size: 100
