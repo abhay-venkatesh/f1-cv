@@ -122,24 +122,35 @@ class SMNISTMLETrainer(Agent):
                 "class_" + str(c),
                 "2.ckpt",
             )
-            model = MLENet().to(self.device)
-            model.load_state_dict(torch.load(model_path))
-            models[c] = model
+            models[c] = MLENet().to(self.device)
+            models[c].load_state_dict(torch.load(model_path))
 
         preds = np.zeros((len(val_loader.dataset), N_CLASSES))
         probs = np.zeros((len(val_loader.dataset), N_CLASSES))
         print("Evaluating...")
         for c in tqdm(range(N_CLASSES)):
-            model = models[c]
-            model.eval()
+            models[c].eval()
 
+            total = 0
+            correct = 0
             with torch.no_grad():
                 for i, (X, Y) in enumerate(val_loader):
+                    # One vs. Rest Conversion
+                    Y = Y[:, 0]
+                    Y[Y == c] = 1
+                    Y[Y != c] = 0
+
                     X, Y = X.to(self.device), Y.to(self.device)
-                    Y_ = model(X).reshape((1, -1))
+                    Y_ = models[c](X)
                     _, predicted = torch.max(Y_.data, 1)
+
                     preds[:, c][i] = predicted
                     probs[:, c][i] = torch.nn.Softmax(dim=1)(Y_)[0][1]
+
+                    total += Y.size(0)
+                    correct += (predicted == Y).sum().item()
+            accuracy = 100.0 * correct / total
+            print("Accuracy = " + str(accuracy))
 
         # Simple prediction
         preds_iter = iter(preds)
@@ -151,6 +162,10 @@ class SMNISTMLETrainer(Agent):
             pred = next(preds_iter)
             if np.array_equal(gt, pred):
                 correct += 1
+            else:
+                print(gt)
+                print(pred)
+                input("next...")
             total += 1
         accuracy = 100.0 * correct / total
         print("Simple accuracy:", accuracy)
