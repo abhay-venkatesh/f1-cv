@@ -50,8 +50,11 @@ class SMNISTMLETrainer(Agent):
 
                     # One vs. Rest Conversion
                     Y = Y[:, 0]
-                    Y[Y == c] = 1
-                    Y[Y != c] = 0
+                    if Y == c:
+                        Y = np.ones((1))
+                    else:
+                        Y = np.zeros((1))
+                    Y = torch.from_numpy(Y).long()
 
                     # Forward computation
                     X, Y = X.to(self.device), Y.to(self.device)
@@ -86,6 +89,7 @@ class SMNISTMLETrainer(Agent):
                         total += Y.size(0)
                         correct += (predicted == Y).sum().item()
                 accuracy = 100.0 * correct / total
+                print("Accuracy = " + str(accuracy))
                 self.logger.log("epoch", epoch, "accuracy", accuracy)
 
                 self.logger.graph()
@@ -105,6 +109,21 @@ class SMNISTMLETrainer(Agent):
 
             models[c] = model
 
+        """ Load from checkpoint
+        for c in range(N_CLASSES):
+            model_path = Path(
+                "/home/abhay/code/src/f1-cv",
+                "experiments",
+                "smnist_mle_anton_1",
+                "checkpoints",
+                "class_" + str(c),
+                "2.ckpt",
+            )
+            model = MLENet().to(self.device)
+            model.load_state_dict(torch.load(model_path))
+            models[c] = model
+        """
+
         preds = np.zeros((len(val_loader.dataset), N_CLASSES))
         probs = np.zeros((len(val_loader.dataset), N_CLASSES))
         print("Evaluating...")
@@ -119,6 +138,8 @@ class SMNISTMLETrainer(Agent):
                     _, predicted = torch.max(Y_.data, 1)
                     preds[:, c][i] = predicted
                     probs[:, c][i] = torch.nn.Softmax(dim=1)(Y_)[0][1]
+            break
+        raise RuntimeError
 
         # Simple prediction
         preds_iter = iter(preds)
@@ -128,6 +149,9 @@ class SMNISTMLETrainer(Agent):
             gt = np.zeros((N_CLASSES))
             gt[y[0][0]] = 1
             pred = next(preds_iter)
+            print(pred)
+            print(gt)
+            input("Press next...")
             if np.array_equal(gt, pred):
                 correct += 1
             total += 1
