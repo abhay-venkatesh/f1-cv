@@ -1,0 +1,9 @@
+agent: COCOStuffValidator
+dataset path: /home/abhay/code/data/cocostuff/dataset/images/val2017
+model: deep_lab
+checkpoint path: /mnt/arxiv/f1-cv/baseline_checkpoints/50.ckpt
+
+# Divide the evaluation set into 1 piece
+eval split divisor: 1
+# This is the 0th piece
+split number: 0
